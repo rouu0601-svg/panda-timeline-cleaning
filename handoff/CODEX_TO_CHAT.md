@@ -60,3 +60,18 @@ EMULATOR_WINDOW_RESULT=NOT_TESTED
 EXIT_CODE=NOT_RUN
 ROOT_CAUSE_STATUS=CONFIRMED_MISSING_LOCAL_QT_PLATFORM_PLUGIN
 NEXT_STEP=不从随机网站下载或替换 DLL；先取得与 Emulator 25.2.5 匹配的官方包并确认其中是否有 `windows-x86/plugins/platforms/qwindows.dll`。官方 Android Qt 预编译目录可见该标准路径：https://android.googlesource.com/platform/prebuilts/android-emulator-build/qt/%2B/refs/heads/emu-2.0-release
+
+---
+
+ROUND=OFFICIAL_25_2_5_QT_RESTORE
+OFFICIAL_PACKAGE_SOURCE=https://dl.google.com/android/repository/tools_r25.2.5-windows.zip
+OFFICIAL_PACKAGE_DOWNLOADED=YES
+OFFICIAL_PACKAGE_HASH=SHA256: da1a0bd9bb358cb52a8fc0a553a060428efe11151e69b9ea7a5cbacb27cf1c7c
+QWINDOWS_IN_OFFICIAL_PACKAGE=YES（x86 tools\\lib；另有 x64 tools\\lib64 对应副本）
+QWINDOWS_OFFICIAL_PATH=D:\\CodexData\\MagicWarriorCompat\\official_sdk_tools_25_2_5\\tools\\lib\\qt\\plugins\\platforms\\qwindows.dll
+QT_RUNTIME_COMPLETE=YES（官方 x86 包含 12 个 Qt5 lib DLL 和 13 个 plugins 文件；platforms/imageformats/bearer/generic/iconengines/printsupport/sqldrivers 均存在）
+CURRENT_RUNTIME_MISSING_FILES=整个 `runtime\\emulator\\lib\\qt\\plugins` 子树缺失（qwindows.dll、qminimal.dll、qgenericbearer.dll、qnativewifibearer.dll、qtuiotouchplugin.dll、qsvgicon.dll、qgif/qico/qjpeg/qsvg.dll、windowsprintersupport.dll、qsqlite/qsqlodbc.dll 等 13 个官方 x86 插件文件）
+RUNTIME_QTFIX_CREATED=YES（D:\\CodexData\\MagicWarriorCompat\\runtime_qtfix；以旧 runtime 为基础，仅补齐官方 x86 plugins 子树）
+QTFIX_LAUNCHER_CREATED=YES（D:\\CodexData\\MagicWarrior\\Start_MagicWarrior_HOST_QTFIX.bat）
+ORIGINAL_RUNTIME_UNCHANGED=YES（原 `runtime\\emulator\\lib\\qt\\plugins` 仍不存在；未覆盖原文件）
+NEXT_STEP=用户双击 QTFIX 启动器，观察是否出现 Android Emulator 窗口；本轮不启动 APK、不处理 ADB/网络/音频/guest。

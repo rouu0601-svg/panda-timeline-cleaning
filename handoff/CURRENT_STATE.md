@@ -35,11 +35,22 @@
 - 对旧 Emulator 目录的只读搜索未找到可确认的 `qwindows.dll`。
 - 现有前台 BAT 的 `QT_QPA_PLATFORM_PLUGIN_PATH` 未设置；仅扩展了普通 `PATH`。
 - 因 DLL 缺失，本轮没有创建或运行 QT 路径测试启动器，窗口结果和退出码均为 `NOT_TESTED` / `NOT_RUN`。
-- 官方 Android Qt 预编译目录显示标准插件路径为 `windows-x86/plugins/platforms/qwindows.dll`；精确的 Emulator 25.2.5 官方归档尚未下载或替换。
+- 官方 Android Qt 预编译目录显示标准插件路径为 `windows-x86/plugins/platforms/qwindows.dll`；Emulator 25.2.5 官方归档已下载到独立目录，未替换原 runtime。
+
+## Official 25.2.5 package and qtfixed runtime
+
+- 官方来源：`https://dl.google.com/android/repository/tools_r25.2.5-windows.zip`
+- 下载 SHA256：`da1a0bd9bb358cb52a8fc0a553a060428efe11151e69b9ea7a5cbacb27cf1c7c`
+- 官方 x86 qwindows：`D:\\CodexData\\MagicWarriorCompat\\official_sdk_tools_25_2_5\\tools\\lib\\qt\\plugins\\platforms\\qwindows.dll`
+- 官方包同时包含 `tools\\lib64\\qt\\plugins\\platforms\\qwindows.dll`；当前 `emulator-arm.exe` 与官方 `tools\\emulator-arm.exe` SHA256 相同，故使用 x86 `tools\\lib` 树。
+- 当前 runtime 的 `emulator-arm.exe`、Qt5Core、Qt5Gui、Qt5Widgets 与官方 x86 对应文件 SHA256 相同；缺失的是整个 Qt plugins 子树，而不是核心 Qt DLL。
+- 已构建 `D:\\CodexData\\MagicWarriorCompat\\runtime_qtfix`：完整复制旧 runtime 后，只增加官方 x86 Qt plugins 子树（13 文件，约 3.23 MB）。
+- 已创建 `D:\\CodexData\\MagicWarrior\\Start_MagicWarrior_HOST_QTFIX.bat`：仅引用 `runtime_qtfix`、设置 `QT_QPA_PLATFORM_PLUGIN_PATH`、使用 `-gpu host`，不自动安装/启动 APK。
+- 原 runtime 未修改，原 userdata/cache 未修改。
 
 ## Next candidate action
 
-下一步先获得并核对与 Emulator 25.2.5 匹配的官方包；不从随机网站下载、不覆盖现有文件。暂不启动 APK，不检查 ADB、网络、音频或 guest。
+下一步用户在正常 Windows 桌面运行 QTFIX 启动器，只观察窗口和退出状态；暂不启动 APK，不检查 ADB、网络、音频或 guest。
 
 ## GitHub handoff sync
 
