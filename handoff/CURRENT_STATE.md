@@ -29,9 +29,17 @@
 
 下一轮仅先只读确认同一 Emulator 25.2.5 包中的 `lib\\qt\\plugins\\platforms\\qwindows.dll`，以及 Qt 平台插件搜索路径。最小候选是设置 `QT_QPA_PLATFORM_PLUGIN_PATH` 指向该 `platforms` 目录；若 DLL 缺失，再从匹配的原始 Emulator 包恢复。当前没有执行任何修复。
 
+## Qt plugin check
+
+- 目标文件不存在：`D:\\CodexData\\MagicWarriorCompat\\runtime\\emulator\\lib\\qt\\plugins\\platforms\\qwindows.dll`
+- 对旧 Emulator 目录的只读搜索未找到可确认的 `qwindows.dll`。
+- 现有前台 BAT 的 `QT_QPA_PLATFORM_PLUGIN_PATH` 未设置；仅扩展了普通 `PATH`。
+- 因 DLL 缺失，本轮没有创建或运行 QT 路径测试启动器，窗口结果和退出码均为 `NOT_TESTED` / `NOT_RUN`。
+- 官方 Android Qt 预编译目录显示标准插件路径为 `windows-x86/plugins/platforms/qwindows.dll`；精确的 Emulator 25.2.5 官方归档尚未下载或替换。
+
 ## Next candidate action
 
-下一步先确认 Qt 平台插件文件和搜索路径；确认后再决定是否制作单独的启动器修复副本。暂不启动 APK，不检查 ADB、网络、音频或 guest。
+下一步先获得并核对与 Emulator 25.2.5 匹配的官方包；不从随机网站下载、不覆盖现有文件。暂不启动 APK，不检查 ADB、网络、音频或 guest。
 
 ## GitHub handoff sync
 

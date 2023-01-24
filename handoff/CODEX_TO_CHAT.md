@@ -47,3 +47,16 @@ ACTION_TAKEN=
 
 NEXT_STEP=
 待用户确认后，再做 Qt 插件路径/文件的只读确认；确认后再决定是否制作单独的启动器修复副本。
+
+---
+
+ROUND=QT_WINDOWS_PLATFORM_PLUGIN
+QWINDOWS_DLL_FOUND=NO
+QWINDOWS_DLL_PATH=NOT_FOUND（目标路径 `D:\\CodexData\\MagicWarriorCompat\\runtime\\emulator\\lib\\qt\\plugins\\platforms\\qwindows.dll` 不存在；对旧 Emulator 目录的只读文件搜索也未找到可确认的 qwindows.dll）
+QT_PLUGIN_PATH_BEFORE=UNSET（现有 BAT 只设置普通 PATH，未设置 QT_QPA_PLATFORM_PLUGIN_PATH）
+QT_PLUGIN_PATH_TESTED=NOT_TESTED（DLL 缺失，未启动模拟器）
+TEST_LAUNCHER_CREATED=NO
+EMULATOR_WINDOW_RESULT=NOT_TESTED
+EXIT_CODE=NOT_RUN
+ROOT_CAUSE_STATUS=CONFIRMED_MISSING_LOCAL_QT_PLATFORM_PLUGIN
+NEXT_STEP=不从随机网站下载或替换 DLL；先取得与 Emulator 25.2.5 匹配的官方包并确认其中是否有 `windows-x86/plugins/platforms/qwindows.dll`。官方 Android Qt 预编译目录可见该标准路径：https://android.googlesource.com/platform/prebuilts/android-emulator-build/qt/%2B/refs/heads/emu-2.0-release
