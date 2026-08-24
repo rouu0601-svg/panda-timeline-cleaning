@@ -30,6 +30,25 @@ PUSH_STATUS=SYNCED
 
 ---
 
+ROUND=QTFIX_STANDARD_ADB_PORT_TEST
+PORTS=5554,5555
+ADB_SERVER_PRESTARTED=YES（按顺序执行配套 adb kill-server、adb start-server；初始 adb devices -l 为空）
+EMULATOR_WINDOW=YES（emulator-arm.exe 以 `Android Emulator - <build>:5554` 窗口标题运行；测试结束后正常关闭）
+ADB_DEVICE_VISIBLE=YES（约 20 秒后出现 `emulator-5554`；最终观察仍可见）
+ADB_STATE=offline（不是 absent；`adb devices -l` 显示 `emulator-5554 offline transport_id`）
+SYS_BOOT_COMPLETED=NOT_AVAILABLE（状态不是 device，未执行 getprop）
+ANDROID_DESKTOP=NOT_CONFIRMED／NO_EVIDENCE（180 秒内无 ADB boot 属性，日志也没有 Android 桌面阶段；未启动 APK）
+LAST_LOG_STAGE=已越过旧 5591 的 connection-refused 阶段并成功向 ADB server 发送 `host:emulator:5555`；随后仍停在 `Starting QEMU main loop`、`Initializing hardware OpenGLES emulation support`、监听 console 5554
+GLES_EGL_ERRORS=NONE_REPORTED（无 EGL/GLES/FBO error、native crash 或 fatal 行；仅有既有的 build/boot properties、metrics/update-check 警告）
+PORT_CHAIN_FIXED=PARTIAL（5591 超范围警告消失，5554/5555 注册链已可见；但 ADB 仍 offline，Android guest 未完成可观测启动）
+ROOT_CAUSE_STATUS=PORT_RANGE_WAS_A_REAL_BLOCKER_BUT_NOT_THE_ONLY_BLOCKER（标准端口修复了 ADB server 注册/端口范围问题，却没有使 guest 进入 device/boot_completed；黑屏根因仍不能归为纯 GPU framebuffer）
+NEXT_STEP=停止自动尝试；先报告。本轮不测 guest/software GPU、不换 Emulator、不改 APK/网络/userdata/cache/C 盘、不 wipe-data、不处理音频。
+TEST_LAUNCHER_CREATED=D:\CodexData\MagicWarrior\Start_MagicWarrior_HOST_QTFIX_5554.bat（独立副本；原 QTFIX 启动器未覆盖）
+TEST_LOG_PATH=D:\CodexData\MagicWarriorCompat\matrix\host_qtfix_5554\emulator_console.log
+TEST_CLEANUP=YES（观察结束后仅正常关闭本轮 emulator；未强制杀进程）
+
+---
+
 ROUND=HOST_FOREGROUND_EXIT_CODE_3_DIAGNOSIS
 
 HOST_WINDOW=NO

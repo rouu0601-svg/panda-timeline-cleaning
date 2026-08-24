@@ -60,9 +60,22 @@
 
 `BLACK_SCREEN_CLASS=D`（其他明确启动链错误，当前不能证明是 A 或 C）。最小下一步仅建议在用户确认实例结束后，用旧 Emulator 推荐 ADB 端口范围的单一对照启动，并确保只读观察 `adb=device`/`boot_completed`；本轮没有执行修复，不启动 APK，不改 ADB、网络、防火墙、APK、userdata、cache、VMware 或 C 盘，也不 wipe-data。
 
+## Standard ADB port test (5554/5555)
+
+- 为避免同一 userdata/cache 并行写入，先正常关闭了仍在运行的旧 5590/5591 实例；未强制终止。
+- 仅建立独立启动器 `D:\CodexData\MagicWarrior\Start_MagicWarrior_HOST_QTFIX_5554.bat`，唯一变量是 `-ports 5554,5555`；仍使用同一 `runtime_qtfix`、API21 ARM32 system image、`gpu=host`、同一 userdata/cache；不启动 APK。
+- 按顺序执行配套 `adb kill-server`、`adb start-server`，然后启动模拟器。5554/5555 启动前均空闲。
+- 进程以 `Android Emulator - <build>:5554` 窗口标题运行并保持活动；观察超过 180 秒后正常关闭。
+- `adb devices -l` 从初始空列表变为 `emulator-5554 offline`（非 absent，非 device）。因此标准端口消除了旧日志中的“5591 超出推荐范围”和启动时无法向 ADB server 注册的问题，但没有完成 ADB 握手。
+- 新日志 `D:\CodexData\MagicWarriorCompat\matrix\host_qtfix_5554\emulator_console.log` 显示 `sent '0012host:emulator:5555' to ADB server`，随后停在 QEMU main loop/OpenGLES 初始化与 console 5554 监听；没有 `sys.boot_completed`、Android 版本、桌面或 EGL/GLES/FBO 错误。
+
+### Current conclusion
+
+`PORT_CHAIN_FIXED=PARTIAL`。5590/5591 的端口范围问题是真实阻塞，但改为 5554/5555 后仍是 `offline`，所以黑屏不能归因于端口问题本身，也不能证明是单纯 host GPU framebuffer；guest boot 仍未确认。按用户边界，本轮停止，不自动测试其他图形模式或修改任何游戏/系统文件。
+
 ## Next candidate action
 
-等待本轮人工实例结束；下一轮只做一个端口/ADB 可观测性对照，不启动 APK。若 ADB 仍无设备，再单独比较 gpu host 与软件模式的窗口启动，不扩大到音频、guest 或游戏逻辑。
+等待用户决定下一步；不要继续自动枚举端口或 GPU。若继续，应先单独分析为什么 API21 ARM32 guest 在 QEMU/OpenGLES 后长期 ADB offline，再决定是否进行任何新的单变量测试。
 
 ## GitHub handoff sync
 
