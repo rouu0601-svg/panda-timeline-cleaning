@@ -110,3 +110,22 @@ ROOT_CAUSE=尚不能把黑屏归咎于 GPU framebuffer：Android 是否完成 bo
 MINIMAL_NEXT_TEST=在用户桌面结束本次实例后，下一轮只建立不改 userdata 的可控启动对照：使用旧 Emulator 推荐 ADB 端口范围内的单一端口组合并先让配套 adb server 存在，再观察是否出现 ADB=device/boot_completed；若仍无设备，再单独测试 gpu host 与 guest/软件渲染的窗口启动差异。当前轮不执行修复。
 ACTION_TAKEN=仅读取进程、CPU 累计时间、netstat、emulator_console.log 和 adb devices；未启动 APK、未执行 getprop、未改 ADB/网络/防火墙、未改 APK/userdata/cache/VMware/C 盘、未 wipe-data。
 PUSH_STATUS=SYNCED
+
+---
+
+ROUND=QTFIX_GPU_OFF_CONTROL
+PORTS=5554,5555
+GPU_MODE=off（唯一变量；日志中的 `qemu.gles=0`，并明确 `GPU emulation is disabled`）
+EMULATOR_WINDOW=YES（emulator-arm.exe 以 `Android Emulator - <build>:5554` 运行；测试结束后正常关闭）
+ADB_DEVICE_VISIBLE=YES（观察期间出现 `emulator-5554`）
+ADB_STATE=offline（180 秒观察结束仍为 offline，未出现 device）
+SYS_BOOT_COMPLETED=NOT_AVAILABLE（没有 device 状态，未执行 getprop）
+ANDROID_DESKTOP=NOT_CONFIRMED／NO_EVIDENCE（日志无 boot completed/桌面阶段；未启动 APK）
+LAST_LOG_STAGE=GPU emulation disabled；QEMU main loop 已启动；console 5554 与 ADB 5555 已监听；日志没有继续进入 Android boot 阶段
+HOST_GPU_BOOT_BLOCKER=NOT_CONFIRMED（gpu=off 在相同 runtime、镜像、userdata/cache、端口下也 offline，因此 host GPU 不能单独解释 guest 未启动）
+ROOT_CAUSE_STATUS=GPU_NOT_SUFFICIENT；当前更像共享的 guest boot/ADB offline 阻塞，尚无 EGL/GLES 错误证据
+NEXT_STEP=停止自动 GPU 枚举；先分析 API21 ARM32 guest 为什么在 QEMU 主循环后长期 ADB offline，再决定后续单变量测试
+TEST_LAUNCHER_CREATED=D:\CodexData\MagicWarrior\Start_MagicWarrior_OFF_QTFIX_5554.bat（独立副本；原 HOST_QTFIX_5554 未修改）
+TEST_LOG_PATH=D:\CodexData\MagicWarriorCompat\matrix\off_qtfix_5554\emulator_console.log
+TEST_CLEANUP=YES（观察超过 180 秒后仅正常关闭 emulator；未强制终止）
+PUSH_STATUS=SYNCED

@@ -73,9 +73,21 @@
 
 `PORT_CHAIN_FIXED=PARTIAL`。5590/5591 的端口范围问题是真实阻塞，但改为 5554/5555 后仍是 `offline`，所以黑屏不能归因于端口问题本身，也不能证明是单纯 host GPU framebuffer；guest boot 仍未确认。按用户边界，本轮停止，不自动测试其他图形模式或修改任何游戏/系统文件。
 
+## GPU-off control (5554/5555)
+
+- 新建独立 `D:\CodexData\MagicWarrior\Start_MagicWarrior_OFF_QTFIX_5554.bat`；原 `HOST_QTFIX_5554.bat` 未修改。除 `-gpu off` 外，保持同一 Emulator 25.2.5、`runtime_qtfix`、API21 ARM32 system image、同一 userdata/cache、5554/5555 和其他参数。
+- 按顺序执行配套 `adb kill-server`、`adb start-server`；启动前 5554/5555 无监听。
+- 日志明确 `GPU emulation is disabled`、`qemu.gles=0`，并进入 QEMU main loop、监听 5554/5555。窗口进程保持运行超过 180 秒。
+- `adb devices -l` 观察期间出现 `emulator-5554 offline`，180 秒结束仍为 `offline`，从未变为 `device`；因此未执行 getprop。
+- 日志无 `sys.boot_completed`、Android 桌面或 EGL/GLES/FBO 错误；未启动 APK。观察结束后仅正常关闭本轮 emulator。
+
+### Current conclusion
+
+`HOST_GPU_BOOT_BLOCKER=NOT_CONFIRMED`。在完全相同的 runtime、镜像、userdata/cache 和标准端口下，`gpu=off` 仍长期 `offline`，所以 host GPU 不能单独解释 guest 未启动；当前更像共享的 API21 ARM32 guest boot/ADB offline 阻塞。
+
 ## Next candidate action
 
-等待用户决定下一步；不要继续自动枚举端口或 GPU。若继续，应先单独分析为什么 API21 ARM32 guest 在 QEMU/OpenGLES 后长期 ADB offline，再决定是否进行任何新的单变量测试。
+等待用户决定下一步；不要继续自动枚举 GPU。若继续，应先分析为什么 API21 ARM32 guest 在 QEMU 主循环后长期 ADB offline，再决定是否进行新的单变量测试。
 
 ## GitHub handoff sync
 
