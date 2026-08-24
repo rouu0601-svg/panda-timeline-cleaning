@@ -23,12 +23,16 @@
 
 ## Current blocker
 
-Codex sandbox 没有交互式 Windows GUI。此前用 D 盘副本前台启动时，emulator-arm.exe 进程约 30 秒仍存活，没有自然退出；因此无法在 sandbox 判断用户管理员桌面是否会显示窗口。旧 BAT 的 `start` 分离启动还会隐藏真实 stdout/stderr/exit code。
+人工前台测试结果为 `HOST_WINDOW=NO`、`EMULATOR_EXIT_CODE=3`。指定日志显示 emulator 已完成镜像和 QEMU 参数初始化，随后报错：`This application failed to start because it could not find or load the Qt platform plugin "windows".` 当前直接阻塞点是 Qt Windows 平台插件缺失或未被定位。此前的 `start` 分离问题已经由前台启动器解决，不再是本轮根因。
+
+## Minimal fix suggestion (not applied)
+
+下一轮仅先只读确认同一 Emulator 25.2.5 包中的 `lib\\qt\\plugins\\platforms\\qwindows.dll`，以及 Qt 平台插件搜索路径。最小候选是设置 `QT_QPA_PLATFORM_PLUGIN_PATH` 指向该 `platforms` 目录；若 DLL 缺失，再从匹配的原始 Emulator 包恢复。当前没有执行任何修复。
 
 ## Next candidate action
 
-用户在正常 Windows 桌面双击前台启动器，等待最多 60 秒，只观察窗口和 Android 桌面，不启动游戏。窗口出现后回复 `HOST_WINDOW=YES`；没有窗口则回复 `HOST_WINDOW=NO`。下一轮再决定是否检查 ADB 和应用级网络隔离。
+下一步先确认 Qt 平台插件文件和搜索路径；确认后再决定是否制作单独的启动器修复副本。暂不启动 APK，不检查 ADB、网络、音频或 guest。
 
 ## GitHub handoff sync
 
-本地 handoff 提交已完成；用户已完成浏览器认证，但随后本机 Git push 与只读 `ls-remote` 均无法连接 `github.com:443`，GitHub 写入接口仍返回 `HTTP 403 Resource not accessible by integration`。网络或连接器恢复后再执行 `git push origin main`。
+本轮 handoff 更新待提交并推送。

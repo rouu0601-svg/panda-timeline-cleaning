@@ -26,5 +26,24 @@ Codex sandbox 没有交互式 Windows 桌面，不能替用户判断 GUI 窗口�
 NEXT_STEP=
 等待用户完成一次可见桌面人工测试。只有窗口出现后，才继续 ADB 状态和应用 UID 网络隔离验证。
 
-PUSH_STATUS=BLOCKED_GITHUB_NETWORK_OR_INTEGRATION
-PUSH_DETAIL=用户已完成 GitHub 浏览器认证；随后本地 Git push 与只读 ls-remote 均无法连接 github.com:443，已连接 GitHub 写入接口仍返回 HTTP 403 Resource not accessible by integration。待网络/连接器恢复后，在仓库目录执行 `git push origin main`。
+PUSH_STATUS=SYNCED
+
+---
+
+ROUND=HOST_FOREGROUND_EXIT_CODE_3_DIAGNOSIS
+
+HOST_WINDOW=NO
+EMULATOR_EXIT_CODE=3
+LOG_PATH=D:\\CodexData\\MagicWarriorCompat\\matrix\\host_foreground\\emulator_console.log
+
+ROOT_CAUSE=
+日志末尾明确报错：`This application failed to start because it could not find or load the Qt platform plugin "windows".` 模拟器此前已经读取 system image、userdata、cache、hardware-qemu.ini，完成 GPU host 配置并生成 QEMU 参数；因此退出码 3 的直接原因是 Qt Windows 平台插件缺失或未被 Qt 定位，不是 APK、ADB、网络、镜像或端口问题。
+
+MINIMAL_FIX_SUGGESTION=
+只在下一轮获准后处理：确认同一 Emulator 25.2.5 包内的 `lib\\qt\\plugins\\platforms\\qwindows.dll` 存在，并让启动器把 Qt 平台插件目录显式指向该目录（例如 `QT_QPA_PLATFORM_PLUGIN_PATH`）。若文件确实缺失，应从同一官方/原始 Emulator 包恢复匹配文件；本轮未执行复制、修改或启动验证。
+
+ACTION_TAKEN=
+仅读取并分析日志；未启动 APK、未 wipe-data、未修改原 APK、网络、防火墙、VMware 或 C 盘，也未更换 Emulator。
+
+NEXT_STEP=
+待用户确认后，再做 Qt 插件路径/文件的只读确认；确认后再决定是否制作单独的启动器修复副本。
