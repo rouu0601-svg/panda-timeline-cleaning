@@ -48,9 +48,21 @@
 - 已创建 `D:\\CodexData\\MagicWarrior\\Start_MagicWarrior_HOST_QTFIX.bat`：仅引用 `runtime_qtfix`、设置 `QT_QPA_PLATFORM_PLUGIN_PATH`、使用 `-gpu host`，不自动安装/启动 APK。
 - 原 runtime 未修改，原 userdata/cache 未修改。
 
+## Live QTFIX black-screen diagnosis
+
+- 用户人工结果：`QTFIX_WINDOW=YES`、`ANDROID_DESKTOP=NO`、`SCREEN=BLACK_PERSISTENT`；本轮将该实例视为仍在运行。
+- `emulator-arm.exe` PID 15644 仍为 Running；未发现独立 qemu-system 进程（旧版 QEMU 嵌入 emulator-arm.exe）。约 6 秒只读 CPU 累计时间从 `0:13:00` 增至 `0:13:06`，因此进程仍有活动。
+- `D:\CodexData\MagicWarriorCompat\matrix\host_qtfix\emulator_console.log` 最后阶段是 `Starting QEMU main loop`、`Initializing hardware OpenGLES emulation support`、监听 console `5590`/ADB `5591`、Serial `emulator-5590`；没有 boot completed、桌面或应用日志。
+- 日志没有 EGL/GLES/FBO/native crash 错误；只有启动时 `can't connect to ADB server: connection refused`，并警告 ADB 端口 `5591` 超出旧版推荐范围 `[5555,5586]`，以及 build/boot properties 外部文件探测缺失。
+- 配套 `adb devices -l` 结果为空（无 `device`、也无 `offline`），所以 `sys.boot_completed`、`init.svc.bootanim`、Android 版本均无法读取。
+
+### Current conclusion
+
+`BLACK_SCREEN_CLASS=D`（其他明确启动链错误，当前不能证明是 A 或 C）。最小下一步仅建议在用户确认实例结束后，用旧 Emulator 推荐 ADB 端口范围的单一对照启动，并确保只读观察 `adb=device`/`boot_completed`；本轮没有执行修复，不启动 APK，不改 ADB、网络、防火墙、APK、userdata、cache、VMware 或 C 盘，也不 wipe-data。
+
 ## Next candidate action
 
-下一步用户在正常 Windows 桌面运行 QTFIX 启动器，只观察窗口和退出状态；暂不启动 APK，不检查 ADB、网络、音频或 guest。
+等待本轮人工实例结束；下一轮只做一个端口/ADB 可观测性对照，不启动 APK。若 ADB 仍无设备，再单独比较 gpu host 与软件模式的窗口启动，不扩大到音频、guest 或游戏逻辑。
 
 ## GitHub handoff sync
 

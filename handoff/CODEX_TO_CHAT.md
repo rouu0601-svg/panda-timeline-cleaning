@@ -75,3 +75,19 @@ RUNTIME_QTFIX_CREATED=YES（D:\\CodexData\\MagicWarriorCompat\\runtime_qtfix；�
 QTFIX_LAUNCHER_CREATED=YES（D:\\CodexData\\MagicWarrior\\Start_MagicWarrior_HOST_QTFIX.bat）
 ORIGINAL_RUNTIME_UNCHANGED=YES（原 `runtime\\emulator\\lib\\qt\\plugins` 仍不存在；未覆盖原文件）
 NEXT_STEP=用户双击 QTFIX 启动器，观察是否出现 Android Emulator 窗口；本轮不启动 APK、不处理 ADB/网络/音频/guest。
+
+---
+
+ROUND=QTFIX_BLACK_SCREEN_LIVE_DIAGNOSIS
+PROCESS_ALIVE=YES（PID 15644；tasklist 状态为 Running；窗口标题为 Android Emulator - <build>:5590；未观察到独立 qemu-system 进程，旧版 QEMU 嵌入 emulator-arm.exe）
+CPU_ACTIVITY=YES（只读两次 tasklist，约 6 秒间隔，CPU 累计时间由 0:13:00 增至 0:13:06；进程未冻结）
+ADB_STATE=NO_DEVICE（配套 adb devices -l 启动/连接了 adb server，但设备列表为空；没有 offline 条目）
+SYS_BOOT_COMPLETED=NOT_AVAILABLE（无 ADB device，未执行 getprop）
+LAST_LOG_STAGE=QEMU main loop 已启动；OpenGLES 初始化已开始；已监听 console 5590 与 ADB 5591，并报告 Serial number emulator-5590；日志随后无 Android boot 完成信息
+GLES_EGL_ERRORS=NONE_REPORTED（日志只有“Initializing hardware OpenGLES emulation support”，未出现 EGL/GLES/FBO error、native crash 或 fatal 行）
+GUEST_BOOT_STATUS=NOT_CONFIRMED（黑屏持续且 ADB 无设备，日志没有 sys.boot_completed/桌面阶段证据）
+BLACK_SCREEN_CLASS=D（当前最佳分类：其他明确启动链错误；不能证明 A 或 C。日志明确记录启动时连接 ADB server 被拒绝、5591 超出旧版推荐范围 [5555,5586]，并且 QtFix runtime 的 build.prop/boot.prop 外部探测文件缺失；QEMU 主循环和 CPU 仍活动）
+ROOT_CAUSE=尚不能把黑屏归咎于 GPU framebuffer：Android 是否完成 boot 未知。可确认的阻塞是旧 Emulator 的 ADB/控制端口链未形成设备（启动时 connection refused；5591 为非推荐端口），同时日志停在 QEMU/OpenGLES 初始化之后；没有直接 EGL/GLES 错误。
+MINIMAL_NEXT_TEST=在用户桌面结束本次实例后，下一轮只建立不改 userdata 的可控启动对照：使用旧 Emulator 推荐 ADB 端口范围内的单一端口组合并先让配套 adb server 存在，再观察是否出现 ADB=device/boot_completed；若仍无设备，再单独测试 gpu host 与 guest/软件渲染的窗口启动差异。当前轮不执行修复。
+ACTION_TAKEN=仅读取进程、CPU 累计时间、netstat、emulator_console.log 和 adb devices；未启动 APK、未执行 getprop、未改 ADB/网络/防火墙、未改 APK/userdata/cache/VMware/C 盘、未 wipe-data。
+PUSH_STATUS=SYNCED
