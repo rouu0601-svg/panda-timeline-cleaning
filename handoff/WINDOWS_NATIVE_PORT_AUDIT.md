@@ -2,7 +2,7 @@
 
 审计轮次：`WINDOWS_NATIVE_PORT_FULL_AUDIT`  
 范围：原始 APK 的只读结构、资源、DEX、ELF 动态符号/字符串，以及已经保存的离线运行证据。  
-边界：没有修改 APK、没有重签/重打包、没有启动 APK、没有连接旧服务器，也没有修改模拟器、网络、userdata 或 C 盘。
+边界：没有修改 APK、没有重签/重打包、没有启动 APK、没有连接旧服务器，也没有修改模拟器、网络、userdata；C 盘未留下持久改动，临时分析辅助脚本已清理。
 
 ## 一句话结论
 
@@ -420,4 +420,4 @@ NEXT_STEP=Implement only PoC-0 through PoC-3 in a separate Windows prototype: wi
 
 ## 证据限制
 
-本轮没有完整反汇编 `libgame.so`，没有声称恢复了所有公式/AI/存档字段；没有把字符串命中当作运行行为；没有把未声明的 Manifest 组件、动态 Dex、Windows 现成工程或完整的在线结算能力臆测为存在。所有 `UNKNOWN` 和百分比区间都保留了这一限制。
+本轮没有完整反汇编 `libgame.so`，没有声称恢复了所有公式/AI/存档字段；没有把字符串命中当作运行行为；没有把未声明的 Manifest 组件、动态 Dex、Windows 现成工程或完整的在线结算能力臆测为存在。所有 `UNKNOWN` 和百分比区间都保留了这一限制。为生成本轮报告曾在 Codex 工作区短暂创建分析辅助脚本，现已删除，未留下 C 盘持久改动。
