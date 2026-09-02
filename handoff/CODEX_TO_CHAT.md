@@ -233,4 +233,4 @@ MINIMAL_NEXT_TEST=仅在下一轮获准后：在 D 盘建立新的只读基线�
 
 ACTION_TAKEN=只读审计 BAT、配置、日志、文件存在性/大小/SHA256；未启动模拟器，未创建或运行 SHOWKERNEL 启动器，未启动 APK，未修改 userdata/cache/APK/网络/防火墙/VMware/C 盘，未 wipe-data。
 
-PUSH_STATUS=待本轮 commit/push 完成后更新
+PUSH_STATUS=SYNCED

@@ -146,4 +146,4 @@ ROOT_CAUSE_STATUS=CONFIRMED_SIGNIFICANT_DIFF_NOT_CAUSALLY_ISOLATED
 MINIMAL_NEXT_TEST=在 D 盘新建隔离副本，采用 matrix\\gpu_off 已知成功 userdata/cache 与保存的 classic gpu=off 命令，仅增加 -show-kernel；不覆盖当前 QTFIX、成功基线或 C 盘文件。
 ```
 
-PUSH_STATUS=待本轮 commit/push 完成后更新
+PUSH_STATUS=SYNCED
