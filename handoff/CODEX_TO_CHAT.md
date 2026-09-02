@@ -129,3 +129,108 @@ TEST_LAUNCHER_CREATED=D:\CodexData\MagicWarrior\Start_MagicWarrior_OFF_QTFIX_555
 TEST_LOG_PATH=D:\CodexData\MagicWarriorCompat\matrix\off_qtfix_5554\emulator_console.log
 TEST_CLEANUP=YES（观察超过 180 秒后仅正常关闭 emulator；未强制终止）
 PUSH_STATUS=SYNCED
+
+---
+
+ROUND=QTFIX_GUEST_BOOT_TRACE
+
+SCOPE=READ_ONLY_STARTUP_CHAIN_AUDIT
+
+KNOWN_GOOD_BOOT_CHAIN_FOUND=YES
+
+KNOWN_GOOD_REFERENCE=
+成功动态证据来自 `C:\Users\Administrator\Documents\Codex\2026-08-23\new-chat\start_api21_classic_offline.bat` 及其产生的 `dynamic_boot_logcat.txt`、人物/地图/战斗日志。该命令使用 C 盘官方 API21 ARM32 system image、`tools_old_25.2.5\tools\emulator-arm.exe`、独立 `android_avd\magic_api21` 数据目录和 `gpu=off`。成功数据镜像的 D 盘只读副本为 `D:\CodexData\MagicWarriorCompat\matrix\gpu_off` / `D:\CodexData\MagicWarrior\avd\magic_api21`。精确的那一次动态调用没有单独保存完整命令转储；因此端口以存档 BAT 的 5556,5557 为命令参考，动态报告另提到清理时曾有 5560,5561 临时实例。
+
+KNOWN_GOOD_EMULATOR_VERSION=25.2.5-3567187（归档文件名/工具包与实际日志一致；`BASELINE.md` 中“30.2.2 / BuildId 6885378”与实际二进制/日志不一致，未把该段文字当作版本证据）
+
+CURRENT_VS_KNOWN_GOOD_DIFF_COUNT=12
+
+DIFF_COUNT_DEFINITION=仅计入启动器/有效硬件配置中已核实的差异；内容相同的核心镜像仍记录为路径差异，未把相同字节重复计为镜像内容差异。
+
+DIFF_01=emulator/runtime 根目录不同：known-good 使用 `C:\Users\Administrator\Documents\Codex\2026-08-23\new-chat\android_sdk\tools_old_25.2.5\tools\emulator-arm.exe`；current 使用 `D:\CodexData\MagicWarriorCompat\runtime_qtfix\emulator\emulator-arm.exe`。二者 SHA256 相同。
+DIFF_02=sysdir/system/kernel/ramdisk/initdata 根目录不同：known-good 为 C 盘 API21 system image；current 为 `D:\CodexData\MagicWarriorCompat\runtime_qtfix\system-image`。对应镜像字节相同。
+DIFF_03=datadir/data/cache 根目录不同：known-good 为 `android_avd\magic_api21`（D 盘镜像副本 `matrix\gpu_off`）；current QTFIX 两个脚本都硬编码 `D:\CodexData\MagicWarriorCompat\matrix\gpu_host`。
+DIFF_04=userdata-qemu.img 内容不同：known-good `6ab17f0e1f50418b66bf2380d6164057c1cd3f7a95d6af0c35a348527616eea2`；current `cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec`。
+DIFF_05=cache.img 内容不同：known-good `32f7385840bddb06fba014cc29ec88757edddc35a09d2edbd63374da37d07b30`；current `7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83`。
+DIFF_06=存档命令 `-partition-size 550`；current QTFIX 使用 `-partition-size 650`。
+DIFF_07=存档命令 `-ports 5556,5557`；current QTFIX 使用 `-ports 5554,5555`（动态成功实例的实际端口未完整留档，故仅把保存命令作为可核对参考）。
+DIFF_08=存档命令带 `-no-window`；current QTFIX 为可见 GUI，没有 `-no-window`。
+DIFF_09=存档命令显式带 `-no-snapshot-save -no-snapshot-load`；current 只有 `-no-snapshot`。
+DIFF_10=存档命令显式 `-dns-server 127.0.0.1`；current QTFIX 未传该参数，日志实际解析为 `192.168.5.1`。
+DIFF_11=有效 hardware-qemu 配置不同：current QTFIX 日志显示 `hw.cpu.ncore=2`、keyboard=false、audioInput/Output=true、camera.back=emulated；known-good AVD config 为 ncore=1、keyboard=yes、audioInput=no、audioOutput=no、camera.back=none。classic QEMU 还明确提示 SMP 配置被忽略。
+DIFF_12=环境变量集合不同：known-good 的 `android_env.bat` 设置了 `ANDROID_SDK_HOME`、`ANDROID_AVD_HOME`、`ADB_VENDOR_KEYS` 和 `ANDROID_ADB_SERVER_PORT=5038`；current QTFIX 设置 Qt 插件路径及部分 Android/HOME 变量，但没有 `ADB_VENDOR_KEYS`/`ANDROID_ADB_SERVER_PORT`，并额外带 `-verbose`。
+
+SIGNIFICANT_BOOT_CHAIN_DIFF=
+当前 QTFIX off 控制并不是已知成功状态的同状态对照：它使用了 `matrix\gpu_host` 的 userdata/cache，而成功基线是 `matrix\gpu_off` / `avd\magic_api21`；两套镜像大小相同但 SHA256 均不同。与此同时，QTFIX 使用 GUI、650MB 分区、未指定 DNS、5554/5555 端口和由前次 host 测试留下的有效 hardware-qemu 配置。核心 emulator、kernel、ramdisk、system、initdata 内容相同，因此目前最强证据是“数据/缓存及启动参数链不一致”，不是“API21 ARM32 镜像本身不可启动”。
+
+## Core file audit (absolute paths, existence, size, SHA256)
+
+| artifact | known-good path / evidence | current QTFIX path | result |
+|---|---|---|---|
+| emulator-arm.exe | `C:\Users\Administrator\Documents\Codex\2026-08-23\new-chat\android_sdk\tools_old_25.2.5\tools\emulator-arm.exe`, exists, 9,488,384 bytes, `3ca9ca373382b4998c81b72ef2ee3a2b8aa55b6dcffc7806fdbd32fe4d65ba36` | `D:\CodexData\MagicWarriorCompat\runtime_qtfix\emulator\emulator-arm.exe`, exists, 9,488,384 bytes, same SHA256 | bytes identical |
+| kernel-qemu | `C:\Users\Administrator\Documents\Codex\2026-08-23\new-chat\android_sdk\system-images\android-21\default\armeabi-v7a\kernel-qemu`, exists, 2,407,928 bytes, `c0fb84b0ed4444a56abd3201bb1b13b3d8e664d50d604d7b82a54482d1be8bd6` | `D:\CodexData\MagicWarriorCompat\runtime_qtfix\system-image\kernel-qemu`, exists, 2,407,928 bytes, same SHA256 | bytes identical |
+| ramdisk.img | C API21 image, exists, 713,673 bytes, `4e22f1e413580c3bd9f63a7564e2a24b0c783ff2f2fc5ba3ae3180589da7fe76` | `D:\CodexData\MagicWarriorCompat\runtime_qtfix\system-image\ramdisk.img`, exists, 713,673 bytes, same SHA256 | bytes identical |
+| system.img | C API21 image, exists, 681,574,400 bytes, `f8eb24f36d2fac966b91fa497bfa1d6903241a8f53e3fbb0dd55063154c72bb7` | `D:\CodexData\MagicWarriorCompat\runtime_qtfix\system-image\system.img`, exists, 681,574,400 bytes, same SHA256 | bytes identical |
+| initdata/userdata.img | C API21 image, exists, 576,716,800 bytes, `51f7ed47fcfe0a0f43bf3d36fcb70e4c33e3a5fd514199ef81bf418ac77a6a41` | `D:\CodexData\MagicWarriorCompat\runtime_qtfix\system-image\userdata.img`, exists, 576,716,800 bytes, same SHA256 | bytes identical |
+| userdata-qemu.img | `D:\CodexData\MagicWarriorCompat\matrix\gpu_off\userdata-qemu.img` (same hash as C successful AVD and `D:\CodexData\MagicWarrior\avd\magic_api21`), exists, 681,574,400 bytes, `6ab17f0e1f50418b66bf2380d6164057c1cd3f7a95d6af0c35a348527616eea2` | `D:\CodexData\MagicWarriorCompat\matrix\gpu_host\userdata-qemu.img`, exists, 681,574,400 bytes, `cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec` | content differs |
+| cache.img | `D:\CodexData\MagicWarriorCompat\matrix\gpu_off\cache.img` (same hash as C successful AVD and `D:\CodexData\MagicWarrior\avd\magic_api21`), exists, 69,206,016 bytes, `32f7385840bddb06fba014cc29ec88757edddc35a09d2edbd63374da37d07b30` | `D:\CodexData\MagicWarriorCompat\matrix\gpu_host\cache.img`, exists, 69,206,016 bytes, `7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83` | content differs |
+
+## Existing current-log evidence (not a new launch)
+
+Current QTFIX off log `D:\CodexData\MagicWarriorCompat\matrix\off_qtfix_5554\emulator_console.log` reaches only host-side QEMU setup:
+
+- line 24: `emulator: GPU emulation is disabled`
+- line 106: `emulator: Starting QEMU main loop`
+- line 127: `emulator: (setup_console_and_adb_ports) trying console port 5554, adb port 5555 (legacy: true)`
+- line 129: `emulator: sent '0012host:emulator:5555' to ADB server`
+- line 130: `emulator: Listening for console connections on port: 5554`
+- line 131: `emulator: Serial number of this emulator (for ADB): emulator-5554`
+- no Linux kernel banner, init, mount, zygote, system_server, guest adbd, or `sys.boot_completed` line is present; this run did not use `-show-kernel`.
+
+The known-good `D:\CodexData\MagicWarriorCompat\baseline\evidence\dynamic_boot_logcat.txt` proves a later Android userspace stage for the preserved baseline: `ActivityManager START ... .battlelandAdr`, `Start proc ... abi=armeabi`, `Displayed ... .battlelandAdr`, and `cocos2d-x debug info`. These are prior-run evidence, not evidence from the current QTFIX files.
+
+## Required final state block
+
+ROUND=QTFIX_GUEST_BOOT_TRACE
+
+KNOWN_GOOD_BOOT_CHAIN_FOUND=YES
+CURRENT_VS_KNOWN_GOOD_DIFF_COUNT=12
+SIGNIFICANT_BOOT_CHAIN_DIFF=当前 QTFIX 使用的 gpu_host userdata/cache 与成功基线 gpu_off 不同，且有效 hardware-qemu、分区、DNS、窗口、快照和环境参数也不同；核心 emulator/kernel/ramdisk/system/initdata 字节相同。
+
+CURRENT_EMULATOR_SHA256=3ca9ca373382b4998c81b72ef2ee3a2b8aa55b6dcffc7806fdbd32fe4d65ba36
+CURRENT_KERNEL_SHA256=c0fb84b0ed4444a56abd3201bb1b13b3d8e664d50d604d7b82a54482d1be8bd6
+CURRENT_RAMDISK_SHA256=4e22f1e413580c3bd9f63a7564e2a24b0c783ff2f2fc5ba3ae3180589da7fe76
+CURRENT_SYSTEM_SHA256=f8eb24f36d2fac966b91fa497bfa1d6903241a8f53e3fbb0dd55063154c72bb7
+CURRENT_USERDATA_SHA256=cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec
+CURRENT_CACHE_SHA256=7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83
+
+SHOW_KERNEL_TEST_RUN=NO
+EMULATOR_WINDOW=NOT_RUN
+ADB_DEVICE_VISIBLE=NOT_RUN
+ADB_STATE=NOT_RUN
+
+GUEST_KERNEL_STARTED=UNKNOWN
+INIT_STARTED=UNKNOWN
+SYSTEM_MOUNTED=UNKNOWN
+DATA_MOUNTED=UNKNOWN
+ANDROID_USERSPACE_STARTED=UNKNOWN
+ZYGOE_OR_SYSTEM_SERVER_EVIDENCE=UNKNOWN
+ADBD_GUEST_STARTED=UNKNOWN
+SYS_BOOT_COMPLETED=NOT_AVAILABLE
+
+KERNEL_PANIC=NO_EVIDENCE
+FILESYSTEM_ERROR=UNKNOWN
+INIT_FATAL_ERROR=UNKNOWN
+
+LAST_KERNEL_BOOT_LINE=NOT_CAPTURED_THIS_ROUND（未运行 -show-kernel）
+LAST_INIT_BOOT_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_ANDROID_USERSPACE_LINE=NOT_CAPTURED_THIS_ROUND；current log 无 userspace 行
+LAST_ADBD_LINE=emulator: sent '0012host:emulator:5555' to ADB server（仅 host 注册，不是 guest adbd 已启动证据）
+
+ROOT_CAUSE_CLASS=G_BOOT_CHAIN_MISMATCH
+ROOT_CAUSE_STATUS=CONFIRMED_SIGNIFICANT_DIFF_NOT_CAUSALLY_ISOLATED
+MINIMAL_NEXT_TEST=仅在下一轮获准后：在 D 盘建立新的只读基线副本，使用 `matrix\gpu_off` 的已知成功 userdata/cache 与保存的 classic gpu=off 命令，保持核心镜像不变，并只新增 `-show-kernel`；不覆盖当前 QTFIX、成功基线或任何 C 盘文件。
+
+ACTION_TAKEN=只读审计 BAT、配置、日志、文件存在性/大小/SHA256；未启动模拟器，未创建或运行 SHOWKERNEL 启动器，未启动 APK，未修改 userdata/cache/APK/网络/防火墙/VMware/C 盘，未 wipe-data。
+
+PUSH_STATUS=待本轮 commit/push 完成后更新

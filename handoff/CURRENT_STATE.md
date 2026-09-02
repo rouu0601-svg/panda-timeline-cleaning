@@ -92,3 +92,58 @@
 ## GitHub handoff sync
 
 本轮 handoff 更新待提交并推送。
+
+---
+
+## QTFIX guest boot trace (read-only audit; no emulator launch)
+
+`ROUND=QTFIX_GUEST_BOOT_TRACE`
+
+本轮先按要求停止启动模拟器，比较了当前 `Start_MagicWarrior_OFF_QTFIX_5554.bat` / `Start_MagicWarrior_HOST_QTFIX_5554.bat` 与保存的 `start_api21_classic_offline.bat`、成功动态 logcat 及 D 盘基线副本。已确认成功基线存在，但当前 QTFIX off 不是同状态对照：核心 emulator/kernel/ramdisk/system/initdata 字节相同；userdata/cache、datadir、有效 hardware-qemu 配置、分区大小、DNS、窗口/快照参数、端口参考和 ADB 环境变量不同。
+
+最关键差异：成功基线的 `matrix\gpu_off\userdata-qemu.img` SHA256=`6ab17f0e1f50418b66bf2380d6164057c1cd3f7a95d6af0c35a348527616eea2`、`cache.img`=`32f7385840bddb06fba014cc29ec88757edddc35a09d2edbd63374da37d07b30`；当前 QTFIX 脚本却硬编码使用 `matrix\gpu_host`，其 userdata=`cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec`、cache=`7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83`。大小相同但内容不同。当前有效 hardware-qemu 日志还显示 ncore=2、keyboard=false、audioInput/Output=true、camera.back=emulated，而成功 AVD 配置是 ncore=1、keyboard=yes、audioInput=no、audioOutput=no、camera.back=none。
+
+文件核对：当前 QTFIX `emulator-arm.exe`=`3ca9ca373382b4998c81b72ef2ee3a2b8aa55b6dcffc7806fdbd32fe4d65ba36`（9,488,384 bytes）；kernel=`c0fb84b0ed4444a56abd3201bb1b13b3d8e664d50d604d7b82a54482d1be8bd6`（2,407,928）；ramdisk=`4e22f1e413580c3bd9f63a7564e2a24b0c783ff2f2fc5ba3ae3180589da7fe76`（713,673）；system=`f8eb24f36d2fac966b91fa497bfa1d6903241a8f53e3fbb0dd55063154c72bb7`（681,574,400）；initdata=`51f7ed47fcfe0a0f43bf3d36fcb70e4c33e3a5fd514199ef81bf418ac77a6a41`（576,716,800）。这些与 C 盘成功 API21 image / D 盘 baseline runtime 对应文件一致；没有发现 kernel/ramdisk/system 内容漂移。
+
+现有 QTFIX off 日志只到 host 侧：`GPU emulation is disabled` → `Starting QEMU main loop` → 5554/5555 console/ADB 注册 → `Serial number ... emulator-5554`；无 kernel banner、init、mount、zygote/system_server、guest adbd 或 `sys.boot_completed`。成功基线 logcat 则有 `ActivityManager START`、`Start proc ... abi=armeabi`、`Displayed ... .battlelandAdr` 和 cocos2d-x 行，证明该保留组合曾进入 Android userspace。
+
+本轮没有运行 `-show-kernel`，没有启动 APK，没有修改任何文件/网络/防火墙/VMware/C 盘，没有 wipe-data。详尽差异表与最终字段见 `handoff/CODEX_TO_CHAT.md` 的同名轮次。
+
+### Round output
+
+```makefile
+ROUND=QTFIX_GUEST_BOOT_TRACE
+KNOWN_GOOD_BOOT_CHAIN_FOUND=YES
+CURRENT_VS_KNOWN_GOOD_DIFF_COUNT=12
+SIGNIFICANT_BOOT_CHAIN_DIFF=当前 QTFIX 使用 gpu_host userdata/cache 与成功基线 gpu_off 不同，且有效 hardware-qemu、分区、DNS、窗口、快照和环境参数也不同；核心镜像字节相同。
+CURRENT_EMULATOR_SHA256=3ca9ca373382b4998c81b72ef2ee3a2b8aa55b6dcffc7806fdbd32fe4d65ba36
+CURRENT_KERNEL_SHA256=c0fb84b0ed4444a56abd3201bb1b13b3d8e664d50d604d7b82a54482d1be8bd6
+CURRENT_RAMDISK_SHA256=4e22f1e413580c3bd9f63a7564e2a24b0c783ff2f2fc5ba3ae3180589da7fe76
+CURRENT_SYSTEM_SHA256=f8eb24f36d2fac966b91fa497bfa1d6903241a8f53e3fbb0dd55063154c72bb7
+CURRENT_USERDATA_SHA256=cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec
+CURRENT_CACHE_SHA256=7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83
+SHOW_KERNEL_TEST_RUN=NO
+EMULATOR_WINDOW=NOT_RUN
+ADB_DEVICE_VISIBLE=NOT_RUN
+ADB_STATE=NOT_RUN
+GUEST_KERNEL_STARTED=UNKNOWN
+INIT_STARTED=UNKNOWN
+SYSTEM_MOUNTED=UNKNOWN
+DATA_MOUNTED=UNKNOWN
+ANDROID_USERSPACE_STARTED=UNKNOWN
+ZYGOE_OR_SYSTEM_SERVER_EVIDENCE=UNKNOWN
+ADBD_GUEST_STARTED=UNKNOWN
+SYS_BOOT_COMPLETED=NOT_AVAILABLE
+KERNEL_PANIC=NO_EVIDENCE
+FILESYSTEM_ERROR=UNKNOWN
+INIT_FATAL_ERROR=UNKNOWN
+LAST_KERNEL_BOOT_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_INIT_BOOT_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_ANDROID_USERSPACE_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_ADBD_LINE=emulator: sent '0012host:emulator:5555' to ADB server（host 注册，不代表 guest adbd）
+ROOT_CAUSE_CLASS=G_BOOT_CHAIN_MISMATCH
+ROOT_CAUSE_STATUS=CONFIRMED_SIGNIFICANT_DIFF_NOT_CAUSALLY_ISOLATED
+MINIMAL_NEXT_TEST=在 D 盘新建隔离副本，采用 matrix\\gpu_off 已知成功 userdata/cache 与保存的 classic gpu=off 命令，仅增加 -show-kernel；不覆盖当前 QTFIX、成功基线或 C 盘文件。
+```
+
+PUSH_STATUS=待本轮 commit/push 完成后更新
