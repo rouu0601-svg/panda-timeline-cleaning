@@ -1,423 +1,166 @@
-# 《魔界勇士》Windows 原生移植体检
+# MagicWarrior current state
 
-审计轮次：`WINDOWS_NATIVE_PORT_FULL_AUDIT`  
-范围：原始 APK 的只读结构、资源、DEX、ELF 动态符号/字符串，以及已经保存的离线运行证据。  
-边界：没有修改 APK、没有重签/重打包、没有启动 APK、没有连接旧服务器，也没有修改模拟器、网络、userdata；C 盘未留下持久改动，临时分析辅助脚本已清理。
+## Latest stable state: WINDOWS_NATIVE_PORT_FULL_AUDIT
 
-## 一句话结论
+- Audit report: `handoff/WINDOWS_NATIVE_PORT_AUDIT.md`
+- Machine-readable report: `handoff/WINDOWS_NATIVE_PORT_AUDIT.json`
+- Original APK analysis copy: `D:\CodexData\MagicWarriorCompat\game\magic_warrior.apk`; SHA256 `7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6`; original APK was not modified.
+- APK structure: 2,522 ZIP entries; 2,509 assets; 5 `res` entries; 1 `classes.dex`; 2 ARM32 `armeabi` ELF libraries; no Windows PE binary.
+- Engine: `cocos2d-1.0.1-x-0.12.0` string plus Cocos symbols; version confidence HIGH. Custom game integration is confirmed, but upstream engine source modifications remain UNKNOWN.
+- Core logic: `lib/armeabi/libgame.so` (7,481,752 bytes, SHA256 `5e7c03ea3e3c2c198c69d5bf96fba28c23947f4f6744abace3b92888d4deb412`) is stripped ARM32 and contains role, battle, map, skill, save, network, renderer and 24 JNI exports. `libcocosdenshion.so` is the separate audio library (87,280 bytes, SHA256 `112f552bef95afca1636742be92930748f9f2e232656a6f8833abc3d761b48d5`).
+- Content: 1,365 PNG, 27 JPG, 545 plist, 121 map, 126 act, 29 ani, 5 ant, 22 par, 131 sprite, 15 JSON, 116 MP3 and 5 WAV in assets; no Lua/JS executable scripts. Data descriptors are plentiful, but gameplay rules remain native.
+- Historical offline evidence remains authoritative: API21/ARM32 installed and booted the game, created a character, entered the map and started the first battle without the old server. Saves were package-root binary/XML files (`a_file_android_1_0`, `a_server_android`, `name_android_tmp`, `xp.txt`), not SQLite.
+- Graphics conclusion: assets are ZIP/header/sample-valid and there are no PVR/ETC/PKM/DDS/KTX/WebP textures. `libgame.so` uses GLES1 fixed pipeline plus OES/FBO/mipmap/atlas paths; old emulator EGL/FBO failures make asset corruption UNLIKELY as the mosaic root. A Windows-native renderer can LIKELY bypass that emulator-specific artifact.
+- Windows classification: `CLASS_C_HEAVY_PORT`; feasibility MEDIUM; engineering risk VERY_HIGH. Reuse estimates: art 85-95%, audio 90-100%, map 70-85%, data 70-85%, descriptor/script 50-70%, native logic 10-25%, overall content 70-85%.
+- Recommended route: `ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER`. Rebuild Windows entry/window/input, filesystem/save adapter, lifecycle/JNI, GLES/EGL/FBO renderer, audio backend and ARM32 gameplay/state/AI/save logic; remove or isolate obsolete payment, update, account and device SDKs.
+- `WINDOWS_POC_FEASIBLE=YES`; `RECOMMEND_CONTINUE=YES` only as a staged PoC. First PoC is window -> one original image -> one UI descriptor/font -> one custom map parser. Do not start full battle rewrite in the audit round.
+- This round was read-only against the game/emulator: no APK, emulator, network, firewall, VMware or userdata/cache changes. Temporary Codex analysis helpers on C drive were removed; no persistent C-drive change remains.
+- Final local commit `5625e3436b11b34e527c080511dcf090d1115618` is pushed and `main` is synchronized with `origin/main`. No APK/emulator/network state was changed by the Git operations.
 
-可以做，但这是 `CLASS_C_HEAVY_PORT`：图片、音乐、地图和大量数据可以保留；真正的战斗、角色、地图状态和存档规则主要在一个 ARM32 原生库里，必须重建 Windows 平台层并重新实现/验证这部分逻辑。它不是“直接编译 cocos2d-x 就完成”，但也不是只能从零重画。
+## Stable facts
 
-## 审计源与完整性
+- 原 APK 未修改，SHA256：`7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6`
+- Android 5.0.2 / API 21 / ARM32 可安装并启动。
+- 单机流程已确认可创建角色、进入地图和启动首场战斗；服务器研究已停止。
+- `gpu=off` 是保底运行方案；存在白屏和彩块问题。
+- `gpu=host` 已确认菜单、地图明显改善；完整战斗尚未验证。
+- guest 路线、新版 Emulator、音频和服务器均暂缓。
 
-权威分析副本：
+## Launcher status
 
-`D:\CodexData\MagicWarriorCompat\game\magic_warrior.apk`
+新增：`D:\CodexData\MagicWarrior\Start_MagicWarrior_HOST_FOREGROUND.bat`
 
-原始文件名为 `魔界勇士_2.1_APKPure.apk`；分析副本的 SHA256 与已保存的原 APK 一致：
+- 使用旧 Emulator 25.2.5 的 `emulator-arm.exe`。
+- 使用 API21 ARM32 的现有 host userdata/cache 和 D 盘 system image。
+- 使用 `-gpu host`、console/ADB ports `5590,5591`。
+- 不使用 `start`；emulator 直接占用用户当前控制台，直到自然退出。
+- stdout/stderr 写入 `D:\CodexData\MagicWarriorCompat\matrix\host_foreground\emulator_console.log`。
+- 启动前只检查 emulator、system、kernel、ramdisk、userdata、cache 是否存在。
+- 不自动安装或启动 APK，不添加网络规则，不修改防火墙，不 wipe-data。
 
-`7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6`
+## Current blocker
 
-APK ZIP 统计：
+人工前台测试结果为 `HOST_WINDOW=NO`、`EMULATOR_EXIT_CODE=3`。指定日志显示 emulator 已完成镜像和 QEMU 参数初始化，随后报错：`This application failed to start because it could not find or load the Qt platform plugin "windows".` 当前直接阻塞点是 Qt Windows 平台插件缺失或未被定位。此前的 `start` 分离问题已经由前台启动器解决，不再是本轮根因。
 
-| 项目 | 结果 |
-|---|---:|
-| 压缩文件大小 | 40,328,581 bytes |
-| ZIP 条目总数 | 2,522 |
-| 解压后总大小 | 63,705,791 bytes |
-| `classes.dex` | 1 个，114,392 bytes |
-| `lib/*.so` | 2 个 |
-| `assets/` | 2,509 个 |
-| `res/` | 5 个 |
-| `META-INF/` | 3 个 |
-| Windows PE（`.exe`/原生 Windows `.dll`） | 未发现 |
+## Minimal fix suggestion (not applied)
 
-顶层目录/文件为 `AndroidManifest.xml`、`META-INF`、`assets`、`classes.dex`、`lib`、`res`、`resources.arsc`。
+下一轮仅先只读确认同一 Emulator 25.2.5 包中的 `lib\\qt\\plugins\\platforms\\qwindows.dll`，以及 Qt 平台插件搜索路径。最小候选是设置 `QT_QPA_PLATFORM_PLUGIN_PATH` 指向该 `platforms` 目录；若 DLL 缺失，再从匹配的原始 Emulator 包恢复。当前没有执行任何修复。
 
-签名条目：`META-INF/MANIFEST.MF`、`META-INF/TEST.SF`、`META-INF/TEST.RSA`。这是 APK v1/JAR 签名；证书为 1024-bit RSA、`sha1WithRSAEncryption`，Subject/Issuer 为 `C=CN, ST=BJ, L=BJ, O=KONGZHONG, OU=KO, CN=SHENSY`，序列号 `0x4ff10401`，有效期 2012-07-02 至 2112-06-08。这里没有把未执行 `apksigner` 的 v2/v3 状态臆测为已确认。
+## Qt plugin check
 
-## 游戏现在由什么组成
+- 目标文件不存在：`D:\\CodexData\\MagicWarriorCompat\\runtime\\emulator\\lib\\qt\\plugins\\platforms\\qwindows.dll`
+- 对旧 Emulator 目录的只读搜索未找到可确认的 `qwindows.dll`。
+- 现有前台 BAT 的 `QT_QPA_PLATFORM_PLUGIN_PATH` 未设置；仅扩展了普通 `PATH`。
+- 因 DLL 缺失，本轮没有创建或运行 QT 路径测试启动器，窗口结果和退出码均为 `NOT_TESTED` / `NOT_RUN`。
+- 官方 Android Qt 预编译目录显示标准插件路径为 `windows-x86/plugins/platforms/qwindows.dll`；Emulator 25.2.5 官方归档已下载到独立目录，未替换原 runtime。
 
-### APK 外壳和入口
+## Official 25.2.5 package and qtfixed runtime
 
-`AndroidManifest.xml` 解析结果：
+- 官方来源：`https://dl.google.com/android/repository/tools_r25.2.5-windows.zip`
+- 下载 SHA256：`da1a0bd9bb358cb52a8fc0a553a060428efe11151e69b9ea7a5cbacb27cf1c7c`
+- 官方 x86 qwindows：`D:\\CodexData\\MagicWarriorCompat\\official_sdk_tools_25_2_5\\tools\\lib\\qt\\plugins\\platforms\\qwindows.dll`
+- 官方包同时包含 `tools\\lib64\\qt\\plugins\\platforms\\qwindows.dll`；当前 `emulator-arm.exe` 与官方 `tools\\emulator-arm.exe` SHA256 相同，故使用 x86 `tools\\lib` 树。
+- 当前 runtime 的 `emulator-arm.exe`、Qt5Core、Qt5Gui、Qt5Widgets 与官方 x86 对应文件 SHA256 相同；缺失的是整个 Qt plugins 子树，而不是核心 Qt DLL。
+- 已构建 `D:\\CodexData\\MagicWarriorCompat\\runtime_qtfix`：完整复制旧 runtime 后，只增加官方 x86 Qt plugins 子树（13 文件，约 3.23 MB）。
+- 已创建 `D:\\CodexData\\MagicWarrior\\Start_MagicWarrior_HOST_QTFIX.bat`：仅引用 `runtime_qtfix`、设置 `QT_QPA_PLATFORM_PLUGIN_PATH`、使用 `-gpu host`，不自动安装/启动 APK。
+- 原 runtime 未修改，原 userdata/cache 未修改。
 
-- package：`com.kongzhong.simlife.battlelandcn`
-- versionName：`2.1`
-- versionCode：`6`
-- `minSdkVersion=8`
-- 未声明 `targetSdkVersion`（`UNKNOWN`，不是假定为某个目标版本）
-- 权限：`INTERNET`（重复出现两次）、`ACCESS_WIFI_STATE`、`READ_PHONE_STATE`、`WAKE_LOCK`、`WRITE_EXTERNAL_STORAGE`、`ACCESS_NETWORK_STATE`
-- activity：`battlelandAdr`、`Main`、`InputBox`
-- 主入口 intent-filter：`android.intent.action.MAIN` + `android.intent.category.LAUNCHER`，注册在 `battlelandAdr`
-- receiver：`.BatteryAlarmReceiver`
-- receiver intent-filter：`android.intent.action.ACTION_POWER_CONNECTED`、`android.intent.action.BATTERY_CHANGED`
-- service：没有注册
-- provider：没有注册
+## Live QTFIX black-screen diagnosis
 
-这说明 Android 部分是启动、窗口、输入、生命周期、设备信息和在线/支付包装层；它不是完整的玩法实现。电池 receiver 是实际 Manifest 注册项，但不等于开机自启动、远控或计划任务。
+- 用户人工结果：`QTFIX_WINDOW=YES`、`ANDROID_DESKTOP=NO`、`SCREEN=BLACK_PERSISTENT`；本轮将该实例视为仍在运行。
+- `emulator-arm.exe` PID 15644 仍为 Running；未发现独立 qemu-system 进程（旧版 QEMU 嵌入 emulator-arm.exe）。约 6 秒只读 CPU 累计时间从 `0:13:00` 增至 `0:13:06`，因此进程仍有活动。
+- `D:\CodexData\MagicWarriorCompat\matrix\host_qtfix\emulator_console.log` 最后阶段是 `Starting QEMU main loop`、`Initializing hardware OpenGLES emulation support`、监听 console `5590`/ADB `5591`、Serial `emulator-5590`；没有 boot completed、桌面或应用日志。
+- 日志没有 EGL/GLES/FBO/native crash 错误；只有启动时 `can't connect to ADB server: connection refused`，并警告 ADB 端口 `5591` 超出旧版推荐范围 `[5555,5586]`，以及 build/boot properties 外部文件探测缺失。
+- 配套 `adb devices -l` 结果为空（无 `device`、也无 `offline`），所以 `sys.boot_completed`、`init.svc.bootanim`、Android 版本均无法读取。
 
-### Java/Dex
+### Current conclusion
 
-`classes.dex`：114,392 bytes，SHA256 `d0a95b2194491ca6cb17568beda35bb3df182ba1a5fbe518f4b75ff54aa56944`，97 个 class definitions、1,709 个字符串。
+`BLACK_SCREEN_CLASS=D`（其他明确启动链错误，当前不能证明是 A 或 C）。最小下一步仅建议在用户确认实例结束后，用旧 Emulator 推荐 ADB 端口范围的单一对照启动，并确保只读观察 `adb=device`/`boot_completed`；本轮没有执行修复，不启动 APK，不改 ADB、网络、防火墙、APK、userdata、cache、VMware 或 C 盘，也不 wipe-data。
 
-按类描述统计：
+## Standard ADB port test (5554/5555)
 
-- `com.kongzhong.simlife.battlelandcn`：22 个（Activity、输入、IAP、receiver 和 R 类）
-- `org.cocos2dx`：40 个（`Cocos2dxActivity`、`Cocos2dxRenderer`、`GLSurfaceView`、声音、位图、加速度计等）
-- `com.noumena.android.dcpurchase`：20 个（支付 SDK）
-- 其余为 Android 注解/壳类；Apache HttpClient 是使用到的 HTTP API，不作为独立游戏玩法类统计。
+- 为避免同一 userdata/cache 并行写入，先正常关闭了仍在运行的旧 5590/5591 实例；未强制终止。
+- 仅建立独立启动器 `D:\CodexData\MagicWarrior\Start_MagicWarrior_HOST_QTFIX_5554.bat`，唯一变量是 `-ports 5554,5555`；仍使用同一 `runtime_qtfix`、API21 ARM32 system image、`gpu=host`、同一 userdata/cache；不启动 APK。
+- 按顺序执行配套 `adb kill-server`、`adb start-server`，然后启动模拟器。5554/5555 启动前均空闲。
+- 进程以 `Android Emulator - <build>:5554` 窗口标题运行并保持活动；观察超过 180 秒后正常关闭。
+- `adb devices -l` 从初始空列表变为 `emulator-5554 offline`（非 absent，非 device）。因此标准端口消除了旧日志中的“5591 超出推荐范围”和启动时无法向 ADB server 注册的问题，但没有完成 ADB 握手。
+- 新日志 `D:\CodexData\MagicWarriorCompat\matrix\host_qtfix_5554\emulator_console.log` 显示 `sent '0012host:emulator:5555' to ADB server`，随后停在 QEMU main loop/OpenGLES 初始化与 console 5554 监听；没有 `sys.boot_completed`、Android 版本、桌面或 EGL/GLES/FBO 错误。
 
-静态字符串/API 命中包括 `AssetManager`、`Activity`/`Context`、`GLSurfaceView`、EGL/GL10、`MediaPlayer`、`SoundPool`、`WebView`、`HttpGet`/`HttpPost`、`Socket`、`WifiManager`、`TelephonyManager`、`PowerManager` 和传感器。没有发现 `DexClassLoader` 或 `PathClassLoader` 字符串/API；动态 Dex 加载在本轮为 `NOT_CONFIRMED`，不能仅凭“有 classes.dex”声称存在。
+### Current conclusion
 
-Java 层结论：`MEDIUM_BUSINESS_LOGIC`，更准确地说是“薄 Android 外壳 + 在线/支付/输入胶水”，没有证据表明战斗规则主要在 Java。
+`PORT_CHAIN_FIXED=PARTIAL`。5590/5591 的端口范围问题是真实阻塞，但改为 5554/5555 后仍是 `offline`，所以黑屏不能归因于端口问题本身，也不能证明是单纯 host GPU framebuffer；guest boot 仍未确认。按用户边界，本轮停止，不自动测试其他图形模式或修改任何游戏/系统文件。
 
-### cocos2d-x
+## GPU-off control (5554/5555)
 
-证据来自 `lib/armeabi/libgame.so` 字符串和符号，以及 DEX 中的 Cocos2dx Java 类：
+- 新建独立 `D:\CodexData\MagicWarrior\Start_MagicWarrior_OFF_QTFIX_5554.bat`；原 `HOST_QTFIX_5554.bat` 未修改。除 `-gpu off` 外，保持同一 Emulator 25.2.5、`runtime_qtfix`、API21 ARM32 system image、同一 userdata/cache、5554/5555 和其他参数。
+- 按顺序执行配套 `adb kill-server`、`adb start-server`；启动前 5554/5555 无监听。
+- 日志明确 `GPU emulation is disabled`、`qemu.gles=0`，并进入 QEMU main loop、监听 5554/5555。窗口进程保持运行超过 180 秒。
+- `adb devices -l` 观察期间出现 `emulator-5554 offline`，180 秒结束仍为 `offline`，从未变为 `device`；因此未执行 getprop。
+- 日志无 `sys.boot_completed`、Android 桌面或 EGL/GLES/FBO 错误；未启动 APK。观察结束后仅正常关闭本轮 emulator。
 
-- 明确字符串：`cocos2d-1.0.1-x-0.12.0`
-- 符号/类：`CCDirector`、`CCEGLView`、`CCApplication`、`CCScene`、`CCSprite`、`CCTextureCache`、`CCAnimation`、`CCTMXLayer` 等
-- Java glue：`Cocos2dxActivity`、`Cocos2dxRenderer`、`Cocos2dxBitmap`、`Cocos2dxSound`
-
-因此 `COCOS2DX_PRESENT=YES`，版本置信度 `HIGH`，属于 C++ cocos2d-x + Android glue，不是 cocos2d-js 或 cocos2d-lua。  
-`COCOS2DX_MODIFIED=UNKNOWN`：游戏集成和资源格式肯定是定制的，但两个 stripped 二进制无法证明上游 cocos2d-x 源码改了哪些行；不能把“定制集成”误写成“已证明修改了引擎源码”。
-
-## 原生库审计
-
-APK 只有 `lib/armeabi`，没有 `armeabi-v7a`、`arm64-v8a`、`x86` 或 `x86_64` 目录。两个库都是 ARM little-endian ELF32 `DYN`，没有 `.symtab`，只保留动态符号，不能直接当作可移植 Windows C++ 源码。
-
-| 文件 | 大小 | SHA256 | 动态符号 / 定义导出 | NEEDED | 作用判断 |
-|---|---:|---|---:|---|---|
-| `lib/armeabi/libgame.so` | 7,481,752 | `5e7c03ea3e3c2c198c69d5bf96fba28c23947f4f6744abace3b92888d4deb412` | 10,745 / 10,462；JNI 24 个 | `libcocosdenshion.so`, `liblog.so`, `libz.so`, `libGLESv1_CM.so`, `libstdc++.so`, `libm.so`, `libc.so`, `libdl.so` | 核心游戏、渲染调用、资源读取、存档、联网和 Android JNI |
-| `lib/armeabi/libcocosdenshion.so` | 87,280 | `112f552bef95afca1636742be92930748f9f2e232656a6f8833abc3d761b48d5` | 403 / 375；JNI_OnLoad | `liblog.so`, `libstdc++.so`, `libm.so`, `libc.so`, `libdl.so` | CocosDenshion 音频引擎 |
-
-`libgame.so` 的 JNI 导出包括 `nativeInit`、`nativeRender`、`nativeOnPause`/`nativeOnResume`、触摸/按键、`nativeSetPaths`、`nativeSetDeviceInfo`、渠道和时间偏移、输入框，以及支付回调。这是明确的 Android/Java/GL 生命周期边界。
-
-核心类/模块字符串包括：
-
-- 数据/角色：`HBDataBase`、`HBRole`、`HBHero`、`HBRoleProperty`
-- 战斗：`HBBattleRole`、`HBBattleLayer`、`BattleCommand`、`BattleQueryCommand`、`BattleResultCommand`
-- 地图/UI：`HBMap`、`HBMapLayer`、`HBMapLayerData`、`HBMapEvent`、`MainMenu`、`CreateRoleLayer`、`MapScene`、`MapResultLayer`、`RoleInfoLayer`、`RoleSkillLayer`
-- 技能：`HBSkill`、`HBSkillInforPanel`，以及 `animationScript/skill`、`skill/001` 至 `skill/041` 等资源
-- 网络：`HBNet`、`CurlNetManager`、`GetServerCommand`、`GetRecordCommand`、`AddBattleRecordCommand`、`RankBattleCommand`、`RivalsUpdateCommand`
-- 资源/引擎：`AppDelegate`、`CCDirector`、`CCTextureCache`、`CCAnimation` 等
-
-另外，库中包含 `CLIENT libcurl 7.21.4` 和大量 libcurl HTTP 错误字符串。结论是 `NATIVE_LOGIC_CONCENTRATION=VERY_HIGH`：真正的玩法核心不能直接从 Android APK 搬成 Windows 可执行文件；需要对行为做逆向取证后重新实现，或尝试极不稳定的 ARM 翻译路线。
-
-## 脚本与数据外置程度
-
-完整扩展名扫描结果（`assets/`）：
-
-| 类型 | 数量 | 说明 |
-|---|---:|---|
-| `.png` | 1,365 | UI、地图、角色、特效、图标和 atlas 图片 |
-| `.jpg` | 27 | 背景/场景图片 |
-| `.plist` | 545 | texture atlas、动画、UI 文案和粒子描述 |
-| `.map` | 121 | 地图/UI 的 XML-like 自定义格式 |
-| `.act` | 126 | 动作/特效描述 |
-| `.ani` | 29 | 动画描述 |
-| `.ant` | 5 | 动画/特效描述 |
-| `.par` | 22 | 粒子参数 |
-| `.sprite` | 131 | sprite/表格类描述，部分包含 JSON-like 数据 |
-| `.json` | 15 | 技能、塔、NPC、竞技场等数据 |
-| `.mp3` | 116 | 音乐和战斗音效 |
-| `.wav` | 5 | UI 点击/确认类音效 |
-| `.txt` | 1 | `assets/UI/uiScript/introJson.txt` |
-
-没有发现 `.lua`、`.luac`、`.js`、`.jsc`、`.csv`、`.db`、`.sqlite`、`.proto` 或 `.bytes`。因此：
-
-- `LUA_PRESENT=NO`
-- `JAVASCRIPT_PRESENT=NO`
-- 可执行脚本逻辑为 `NONE`；高数量的 plist/map/json/act/ani/par 是数据描述，不是脚本语言。机器字段使用 `SCRIPT_LOGIC_VOLUME=LOW`，并在此处明确“数据描述很多，规则仍在 native”。
-- `DATA_EXTERNALIZATION_STATUS=HIGH`：图片、地图、动画、UI、技能描述、装备/物品字段和大量文案已外置；属性公式、战斗流程、AI、存档编码等仍明显依赖 native。
-
-代表性资源证据：
-
-- `assets/ChessBoardRes/map/1-1.map`：189,824 bytes，SHA256 `a1f342eb2b4e43bef2fe4a6f0aae272a33335f566383ce626092d292cdba74fb`，开头为 XML 声明。
-- `assets/UIImages/main_map_bg.png`：317,485 bytes，SHA256 `ebefe7af8c48897f4521416ba72a0cd7c8d8bdd976ba4ce9fcd272c40a6dae22`。
-- `assets/UIImages/main_map_bg.plist`：4,445 bytes，SHA256 `907a34c956f7f6dc9f191525fd0292c271848f4b3a4fbca290fa5c918734a730`。
-- `assets/animationScript/battleRole0.plist`、`battleRole1.plist`：战斗角色帧/动作描述。
-- `assets/word/SkillDescribe.json`：93,285 bytes，SHA256 `6df6d541b66d88165b70110abf5db82c8ba3bafbbac42ca0d9ff752248b91c8f`。
-- `assets/ChessBoardRes/sprite/iebgnauhz.sprite`：可见装备字段如 `cnname`、`equipmenttype`、`level`、`property`、`suitId`，说明至少一部分装备表在客户端。
-
-有一个名字带尾随空格的条目 `assets/UI/baoshishengji-hd.map `；这是 ZIP 打包命名瑕疵，不是缺失或恶意文件。
-
-地图不是标准 `.tmx` 目录；它是自定义 XML-like `.map`，并与 `.plist`/`.sprite`/图片互相引用。地图数据可解析和复用，但场景装配、坐标、碰撞、UI 和渲染关系需要新客户端适配，因此 `MAP_DATA_REUSABLE=PARTIAL`，场景数据同理。
-
-## 图片、动画与马赛克判断
-
-静态资源没有发现 PVR、ETC、PKM、DDS、KTX 或 WebP 主纹理；PNG/JPEG/atlas 头部抽样合法，ZIP 解压正常。资源抽样不是逐像素验证，所以“所有图片都完美”仍不应声称为绝对事实，但当前证据足以把资源损坏排到低优先级。
-
-`libgame.so` 同时使用：
-
-- GLES 1.x 固定管线：`glMatrixMode`、`glOrthof`、`glFrustumf`、`glTexImage2D`、`glDrawElements`
-- OES/FBO：`glGenFramebuffersOES`、`glBindFramebufferOES`、`glFramebufferTexture2DOES`、`glCheckFramebufferStatusOES`
-- `glGenerateMipmapOES`、`glCompressedTexImage2D`、`glReadPixels`、VBO/texture atlas
-
-历史动态证据显示：同一 APK 在 Android 5.0.2/API21 ARM32 曾启动、建角、进地图和启动首场战斗；地图大致能画出，战斗出现白屏和彩块，并伴随旧模拟器的 EGL/OES/FBO 兼容问题。这个组合更符合旧 Goldfish/模拟器 GLES、FBO、atlas 或 blend 路径问题，不符合“PNG 全部损坏”。
-
-结论：
-
-- `GRAPHICS_ASSET_INTEGRITY=HIGH`（ZIP/头部/抽样层面的高可信，不等于逐像素全量审计）
-- `TEXTURE_FORMAT_RISK=MEDIUM`；没有常见专用压缩纹理，但旧 OES/FBO/atlas 路径有风险
-- `SHADER_PORT_RISK=MEDIUM`；代码以固定管线为主，但仍有混合、粒子和 FBO 语义
-- `RENDERING_PORT_RISK=HIGH`
-- `MOSAIC_CAUSED_BY_ASSET_CORRUPTION=UNLIKELY`
-- `WINDOWS_NATIVE_RENDERER_CAN_BYPASS_CURRENT_MOSAIC=LIKELY`
-
-Windows/SDL/Axmol/现代 cocos2d-x 走正常 PNG/JPEG 解码和桌面 GL/D3D 后，理论上可以绕过当前“模拟器翻译层”的彩块；但必须重新实现纹理坐标、alpha、blend、FBO、粒子和 atlas 行为，不能只复制图片就保证画面一致。
-
-## 音频
-
-资源是 116 个 MP3 + 5 个 WAV；没有 OGG/M4A/CAF/MIDI。`libcocosdenshion.so` 导出 `SimpleAudioEngine`，Java 层同时有 `Cocos2dxMusic`、`Cocos2dxSound`、Android `MediaPlayer`/`SoundPool`。
-
-文件本身可复用：`AUDIO_ASSETS_REUSABLE=YES`。但旧 Cocos2d-x 通过 `AssetManager.openFd()` 读取压缩 WAV 会失败；历史 logcat 已出现 “probably compressed”、MP3 resync 和 MediaPlayer `-38`。Windows 版需要自己的解码/播放后端，音频端口风险 `MEDIUM`；本轮不改音频资源。
-
-## 存档系统
-
-历史离线运行前后对 `/data/data/com.kongzhong.simlife.battlelandcn/` 和外部存储的只读比较显示：
-
-- 没有 `shared_prefs/`、`files/`、`databases/` 中的可见存档；`cache/` 为空。
-- 包根目录存在 `a_file_android_1_0`（1,680 bytes，二进制/疑似加密，人物与进度候选）。
-- 包根目录存在 `a_server_android`（896 bytes，二进制/疑似加密，服务器状态候选）。
-- `name_android_tmp`（112 bytes XML）内容含 `a_file_android_1_0=Player`，确认创建角色名写到本地。
-- `xp.txt`（38 bytes XML）也落盘。
-- 未发现 SQLite 数据库，也没有新的外部存档目录。
-
-所以：
-
-- `SAVE_SYSTEM_TYPE=package-private native binary + small XML metadata; no SQLite`
-- `SAVE_LOCAL=YES`
-- `SAVE_DATA_REUSABLE=PARTIAL`
-- `SAVE_PORT_RISK=HIGH`
-
-Windows 端可以保留原文件作为导入/备份格式；要做到无损继续游戏，需要找到 native 编解码规则，或设计一次性迁移器并与原 Android 结果逐字段比对。不能因为文件名可见就假定二进制已经解密。
-
-## 网络与死服务器影响
-
-静态字符串/符号确认了三类网络：
-
-1. 游戏/记录类：`android.simlife.net/HeroBattle.php`、`android2.simlife.net/HeroBattle.php`、`www.simlife.com/HeroBattle_test/HeroBattle.php`。
-2. 更新/渠道类：`http://herobattlecrack.simlife.net/updateherobattle.php?channel=`、`http://wmch.kongzhong.com`。
-3. 支付类：`passport.kongzhong.com/m/pay.do?m=toPay`、`pay.noumenainnovations.com/pay/*`、`www.simlife.com/HeroBattle_pay/creakpay.php`、`www.simlife.com/admin/iap/*`。
-
-历史完全断网动态证据表明：首屏、创建角色、地图、竞技场本地对手列表和首场战斗启动均能到达；只观察到 DNS/更新线程失败，没有连接旧官方服务器。长期在线竞技、排行榜同步、支付、更新、服务器结算没有做成功性保证。
-
-结论：
-
-- `NETWORK_REQUIRED_FOR_CORE_SINGLEPLAYER=NO`
-- `DEAD_SERVER_BLOCKER_FOR_WINDOWS_PORT=PARTIAL`：死服务器会影响联网/支付/更新/排行等功能，但不是核心离线流程的启动阻塞。
-
-Windows 离线版可以明确砍掉登录、支付、更新和在线排行，先做本地角色/地图/战斗；若以后要保留在线功能，再单独做受控 API，不把旧公网接口带进 PoC。
-
-## Android/JNI 依赖地图
-
-### 可以直接替换
-
-- Android 路径字符串 -> Windows UTF-8/UTF-16 文件路径
-- 基本时间、字符串、日志和线程封装
-- 资源目录根路径
-- 横屏窗口尺寸、输入坐标换算
-
-### 需要兼容层
-
-- `AssetManager`/`open()` -> ZIP 解包目录或只读资源包
-- `SharedPreferences` 语义（虽然本 APK 未实际使用它存档）-> Windows 配置键值
-- Cocos2d-x `CCFileUtils`、plist/json/XML 解析
-- native 二进制存档读写和路径迁移
-- 纹理 atlas、字体和粒子加载
-- 音频资源查找/解码/播放
-
-### 必须重写
-
-- Windows entry point、窗口、消息循环、输入
-- `Activity`/`Context`/`GLSurfaceView`/EGL 启动链
-- 全部 JNI bridge（24 个 `libgame.so` JNI 导出）
-- 设备信息、渠道、时间偏移、加速度计回调
-- GLES1/OES/FBO renderer bootstrap 和帧缓冲语义
-- Android MediaPlayer/SoundPool/CocosDenshion 平台后端
-- `libgame.so` 中的角色、属性、战斗、AI、地图状态、技能、任务、掉落和存档规则
-
-### 可以删除或隔离
-
-- `BatteryAlarmReceiver`（离线桌面版不需要电池广播）
-- `com.noumena.android.dcpurchase` 支付 SDK
-- WebView/HTTP 支付页面
-- 旧更新/渠道检查、账号/排行榜/在线记录模块
-- 电话、Wi-Fi、设备 ID 和传感器等非核心能力
-
-## 第三方 SDK 判断
-
-静态可识别的独立商业 SDK 主要是 `com.noumena.android.dcpurchase`（20 个 DEX 类）。Cocos2d-x/CocosDenshion、libcurl 和 Android/Apache HTTP 是引擎或系统/底层库，不把每一个都夸大成商业 SDK。
-
-估计：
-
-- `THIRD_PARTY_SDK_COUNT=2`（Noumena DCPurchase + bundled libcurl；若只按商业 SDK 计则为 1）
-- `OBSOLETE_ANDROID_SDK_COUNT=1`（支付 SDK）
-- `REMOVABLE_SDK_COUNT=1`（支付/在线包装）
-- `PORT_REQUIRED_SDK_COUNT=0`（离线核心 PoC）
-
-这是“可识别数量”，不是完整软件供应链清单；APK 没有调试符号或 Gradle 源项目，未知项保留为 `UNKNOWN`。
-
-## Windows 路线比较
-
-| 路线 | 实现难度 | 内容复用 | 长期稳定性 | 画面兼容 | 逆向/重写 | 维护成本 | 结论 |
-|---|---|---|---|---|---|---|---|
-| A. 恢复/重建原 cocos2d-x Windows target | 高 | 资源高，代码低 | 中 | 中-高 | 很高（没有工程/源码） | 高 | 可作为参考，但不适合作为第一步 |
-| B. 现代 cocos2d-x/Axmol + 数据兼容层 | 中高 | 资源/数据高，native 逻辑需移植 | 高 | 高 | 高但可分阶段 | 中 | **推荐** |
-| C. ARM32 translation/compatibility bridge | 很高 | 理论上代码高 | 低 | 低-不确定 | 桥接本身很高 | 很高 | 不推荐，仍绕不开 JNI/GL/音频 |
-| D. 全新 Windows client，APK 仅作规格/资源 | 很高 | 资源/规格高 | 高（完成后） | 高 | 最高，接近半重制 | 中高 | 无法恢复 native 行为时的后备路线 |
-
-推荐唯一主路线：`ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER`。原因是它能直接避开旧 Android emulator 的 GLES 黑屏/彩块，同时保留现有图片、地图、动画、文案和数据；native 玩法按模块逐步替换，而不是一次性假设所有行为。
-
-## 可复用率估计
-
-这些是工程估计区间，不是精确统计，也不把“二进制能运行”冒充“源码可复用”：
-
-| 部分 | 估计 | 依据 |
-|---|---:|---|
-| ART_REUSE_PERCENT | 85-95% | PNG/JPG、atlas、UI art、角色头像和特效文件完整 |
-| AUDIO_REUSE_PERCENT | 90-100% | MP3/WAV 文件可留，播放后端要换 |
-| MAP_REUSE_PERCENT | 70-85% | 121 个自定义 map 可留，解析/场景装配要写 |
-| DATA_REUSE_PERCENT | 70-85% | 技能、装备、文案和 UI 数据外置；公式/规则部分在 native |
-| SCRIPT_REUSE_PERCENT | 50-70% | 没有可执行 Lua/JS；plist/map/json 描述可复用但需新解析器 |
-| NATIVE_LOGIC_REUSE_PERCENT | 10-25% | ARM32 stripped `.so` 不能直接链接到 Windows，只能复用行为证据/符号/部分算法思路 |
-| OVERALL_CONTENT_REUSE_PERCENT | 70-85% | 内容资源和数据为主；不代表客户端代码复用率 |
-
-## 必须重写、可以移植、直接复用
-
-### 必须重写
-
-Windows 入口/窗口循环、输入、文件系统和存档路径、Android lifecycle/JNI、GLES/EGL/FBO renderer、音频后端、资源寻址，以及 `libgame.so` 的角色/属性/战斗/AI/地图状态/任务/技能/存档核心。
-
-### 可以移植
-
-plist/map/json/XML/sprite 解析器、资源索引、atlas 坐标、UI 结构、碰撞/地图数据模型、技能/动画时序、Cocos 场景树的概念和可从符号/运行日志恢复的行为。
-
-### 可以直接复用
-
-原始 PNG/JPG/MP3/WAV、atlas/动画描述、地图和文案数据、字体/图标，以及不涉及 Android 路径的内容命名。
-
-### 可以删除
-
-支付、在线账号、更新、旧排行榜/记录同步、设备 ID、电话/Wi-Fi/传感器和电池广播；是否保留要等离线版功能清单确定。
-
-## Windows PoC 最小路线
-
-本轮不开始大规模重写，只定义可验收的阶梯：
-
-| 阶段 | 输入 | 需要实现 | 成功判据 | 最大风险 |
-|---|---|---|---|---|
-| PoC-0 | 无 | Win32/SDL/Axmol 空窗口和输入 | 能打开、关闭、横屏比例稳定 | 框架/编译工具链选择 |
-| PoC-1 | `assets/MainMenu/server_icon.png` 或 `assets/UIImages/main_map_bg.png` | PNG/JPG 解码、alpha、纹理上传 | 图片无彩块、无拉伸错位 | atlas/alpha 语义 |
-| PoC-2 | `assets/UIImages/main_map_bg.plist`、`assets/word/SkillDescribe.json` | plist/json/字体/UI 文案 | 显示一页菜单/文字 | 自定义字段与编码 |
-| PoC-3 | `assets/ChessBoardRes/map/1-1.map`、一个 `.sprite` | map/sprite/数据索引解析 | 输出可验证的地图节点/装备字段 | 自定义 schema 和引用关系 |
-| PoC-4 | `assets/UIImages/main_map_bg.plist` + map | 场景装配、相机和层级 | 显示一张原地图静态场景 | 坐标、裁剪、碰撞 |
-| PoC-5 | `assets/animationScript/battleRole0.plist`、`battleRole1.plist`、一个 `.act/.ani` | 角色帧动画与粒子 | 角色待机/攻击动画完整 | 时序、blend、FBO |
-| PoC-6 | 主菜单资源 | 离线菜单和角色选择状态 | 进入本地角色/地图入口 | 原生状态机缺源码 |
-| PoC-7 | 地图节点 + 本地角色数据 | 地图移动、触发和本地存档 adapter | 可走到第一战斗入口 | 存档格式/规则 |
-| PoC-8 | 战斗动画 + 重建的战斗状态 | 首场战斗最小循环 | 普通攻击、技能、HP/UI、结束状态一致 | native 战斗/AI 是最大工作量 |
-
-建议先做 PoC-0 至 PoC-3。只有图片、文字、地图解析都能稳定通过，才投入战斗规则；这能在较小成本内验证“保留内容、重建客户端”的路线是否值得。
-
-## 是否值得继续
-
-`WINDOWS_POC_FEASIBLE=YES`，`RECOMMEND_CONTINUE=YES`，但前提是按 PoC 阶梯推进并接受“核心 native 逻辑需要较多重建”。如果目标只是短期马上玩，现有 Android 保底环境仍是更低成本；如果目标是摆脱旧模拟器、解决图形兼容、长期离线保存，Windows 原生路线值得继续。
-
-本轮最重要的判断：不是“资源坏了”，也不是“有 cocos2d-x 就能直接编译”。正确描述是“内容资产保存得很好，Android 外壳可替换，玩法核心在 ARM32 stripped native 中，属于重度但可分阶段的移植”。
-
-## 补充机器字段
-
-```ini
-APK_FILE_COUNT=2522
-APK_TOTAL_SIZE=40328581
-DEX_COUNT=1
-NATIVE_LIBRARY_COUNT=2
-ASSET_FILE_COUNT=2509
-RES_FILE_COUNT=5
-SUPPORTED_ABI=armeabi
-PRIMARY_ABI=armeabi
-WINDOWS_NATIVE_BINARY_PRESENT=NO
-COCOS2DX_VERSION_CONFIDENCE=HIGH
-SCRIPT_ENCRYPTED=UNKNOWN (no executable script language found)
-MAP_FORMAT=custom XML-like .map plus plist/sprite references
-MAP_DATA_REUSABLE=PARTIAL
-SCENE_FORMAT=custom map/plist/sprite/json descriptors
-SCENE_DATA_REUSABLE=PARTIAL
-TEXTURE_FORMAT_RISK=MEDIUM
-SHADER_PORT_RISK=MEDIUM
-SAVE_LOCAL=YES
-SAVE_DATA_REUSABLE=PARTIAL
-AUDIO_ENGINE=CocosDenshion SimpleAudioEngine plus Android MediaPlayer/SoundPool glue
-AUDIO_PORT_RISK=MEDIUM
-THIRD_PARTY_SDK_COUNT=2 (one commercial payment SDK plus bundled libcurl; commercial-only count is 1)
-OBSOLETE_ANDROID_SDK_COUNT=1
-REMOVABLE_SDK_COUNT=1
-PORT_REQUIRED_SDK_COUNT=0 for offline core
-TECHNICAL_FEASIBILITY=MEDIUM
+### Current conclusion
+
+`HOST_GPU_BOOT_BLOCKER=NOT_CONFIRMED`。在完全相同的 runtime、镜像、userdata/cache 和标准端口下，`gpu=off` 仍长期 `offline`，所以 host GPU 不能单独解释 guest 未启动；当前更像共享的 API21 ARM32 guest boot/ADB offline 阻塞。
+
+## Next candidate action
+
+等待用户决定下一步；不要继续自动枚举 GPU。若继续，应先分析为什么 API21 ARM32 guest 在 QEMU 主循环后长期 ADB offline，再决定是否进行新的单变量测试。
+
+## GitHub handoff sync
+
+本轮 handoff 更新待提交并推送。
+
+---
+
+## QTFIX guest boot trace (read-only audit; no emulator launch)
+
+`ROUND=QTFIX_GUEST_BOOT_TRACE`
+
+本轮先按要求停止启动模拟器，比较了当前 `Start_MagicWarrior_OFF_QTFIX_5554.bat` / `Start_MagicWarrior_HOST_QTFIX_5554.bat` 与保存的 `start_api21_classic_offline.bat`、成功动态 logcat 及 D 盘基线副本。已确认成功基线存在，但当前 QTFIX off 不是同状态对照：核心 emulator/kernel/ramdisk/system/initdata 字节相同；userdata/cache、datadir、有效 hardware-qemu 配置、分区大小、DNS、窗口/快照参数、端口参考和 ADB 环境变量不同。
+
+最关键差异：成功基线的 `matrix\gpu_off\userdata-qemu.img` SHA256=`6ab17f0e1f50418b66bf2380d6164057c1cd3f7a95d6af0c35a348527616eea2`、`cache.img`=`32f7385840bddb06fba014cc29ec88757edddc35a09d2edbd63374da37d07b30`；当前 QTFIX 脚本却硬编码使用 `matrix\gpu_host`，其 userdata=`cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec`、cache=`7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83`。大小相同但内容不同。当前有效 hardware-qemu 日志还显示 ncore=2、keyboard=false、audioInput/Output=true、camera.back=emulated，而成功 AVD 配置是 ncore=1、keyboard=yes、audioInput=no、audioOutput=no、camera.back=none。
+
+文件核对：当前 QTFIX `emulator-arm.exe`=`3ca9ca373382b4998c81b72ef2ee3a2b8aa55b6dcffc7806fdbd32fe4d65ba36`（9,488,384 bytes）；kernel=`c0fb84b0ed4444a56abd3201bb1b13b3d8e664d50d604d7b82a54482d1be8bd6`（2,407,928）；ramdisk=`4e22f1e413580c3bd9f63a7564e2a24b0c783ff2f2fc5ba3ae3180589da7fe76`（713,673）；system=`f8eb24f36d2fac966b91fa497bfa1d6903241a8f53e3fbb0dd55063154c72bb7`（681,574,400）；initdata=`51f7ed47fcfe0a0f43bf3d36fcb70e4c33e3a5fd514199ef81bf418ac77a6a41`（576,716,800）。这些与 C 盘成功 API21 image / D 盘 baseline runtime 对应文件一致；没有发现 kernel/ramdisk/system 内容漂移。
+
+现有 QTFIX off 日志只到 host 侧：`GPU emulation is disabled` → `Starting QEMU main loop` → 5554/5555 console/ADB 注册 → `Serial number ... emulator-5554`；无 kernel banner、init、mount、zygote/system_server、guest adbd 或 `sys.boot_completed`。成功基线 logcat 则有 `ActivityManager START`、`Start proc ... abi=armeabi`、`Displayed ... .battlelandAdr` 和 cocos2d-x 行，证明该保留组合曾进入 Android userspace。
+
+本轮没有运行 `-show-kernel`，没有启动 APK，没有修改任何文件/网络/防火墙/VMware/C 盘，没有 wipe-data。详尽差异表与最终字段见 `handoff/CODEX_TO_CHAT.md` 的同名轮次。
+
+### Round output
+
+```makefile
+ROUND=QTFIX_GUEST_BOOT_TRACE
+KNOWN_GOOD_BOOT_CHAIN_FOUND=YES
+CURRENT_VS_KNOWN_GOOD_DIFF_COUNT=12
+SIGNIFICANT_BOOT_CHAIN_DIFF=当前 QTFIX 使用 gpu_host userdata/cache 与成功基线 gpu_off 不同，且有效 hardware-qemu、分区、DNS、窗口、快照和环境参数也不同；核心镜像字节相同。
+CURRENT_EMULATOR_SHA256=3ca9ca373382b4998c81b72ef2ee3a2b8aa55b6dcffc7806fdbd32fe4d65ba36
+CURRENT_KERNEL_SHA256=c0fb84b0ed4444a56abd3201bb1b13b3d8e664d50d604d7b82a54482d1be8bd6
+CURRENT_RAMDISK_SHA256=4e22f1e413580c3bd9f63a7564e2a24b0c783ff2f2fc5ba3ae3180589da7fe76
+CURRENT_SYSTEM_SHA256=f8eb24f36d2fac966b91fa497bfa1d6903241a8f53e3fbb0dd55063154c72bb7
+CURRENT_USERDATA_SHA256=cdec74029fe6d0523392ac86ef0ad4f57dd7f5bf249d6a87799c606d1f20dfec
+CURRENT_CACHE_SHA256=7a523466ae2b82717923f1c2cd27e5bcbfd3994d9e51342bb9fb493330d06f83
+SHOW_KERNEL_TEST_RUN=NO
+EMULATOR_WINDOW=NOT_RUN
+ADB_DEVICE_VISIBLE=NOT_RUN
+ADB_STATE=NOT_RUN
+GUEST_KERNEL_STARTED=UNKNOWN
+INIT_STARTED=UNKNOWN
+SYSTEM_MOUNTED=UNKNOWN
+DATA_MOUNTED=UNKNOWN
+ANDROID_USERSPACE_STARTED=UNKNOWN
+ZYGOE_OR_SYSTEM_SERVER_EVIDENCE=UNKNOWN
+ADBD_GUEST_STARTED=UNKNOWN
+SYS_BOOT_COMPLETED=NOT_AVAILABLE
+KERNEL_PANIC=NO
+FILESYSTEM_ERROR=UNKNOWN
+INIT_FATAL_ERROR=UNKNOWN
+LAST_KERNEL_BOOT_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_INIT_BOOT_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_ANDROID_USERSPACE_LINE=NOT_CAPTURED_THIS_ROUND
+LAST_ADBD_LINE=emulator: sent '0012host:emulator:5555' to ADB server（host 注册，不代表 guest adbd）
+ROOT_CAUSE_CLASS=G_BOOT_CHAIN_MISMATCH
+ROOT_CAUSE_STATUS=CONFIRMED_SIGNIFICANT_DIFF_NOT_CAUSALLY_ISOLATED
+MINIMAL_NEXT_TEST=在 D 盘新建隔离副本，采用 matrix\\gpu_off 已知成功 userdata/cache 与保存的 classic gpu=off 命令，仅增加 -show-kernel；不覆盖当前 QTFIX、成功基线或 C 盘文件。
 ```
 
-## 机器状态块
-
-```ini
-ROUND=WINDOWS_NATIVE_PORT_FULL_AUDIT
-
-APK_INTEGRITY=VERIFIED_SHA256_MATCH; APK_V1_JAR_SIGNATURE_PRESENT
-COCOS2DX_PRESENT=YES
-COCOS2DX_VERSION=cocos2d-1.0.1-x-0.12.0
-COCOS2DX_MODIFIED=UNKNOWN
-
-PRIMARY_ABI=armeabi (ARM32 ELF)
-NATIVE_LIBRARY_COUNT=2
-NATIVE_LOGIC_CONCENTRATION=VERY_HIGH
-
-LUA_PRESENT=NO
-JAVASCRIPT_PRESENT=NO
-SCRIPT_LOGIC_VOLUME=LOW (no executable Lua/JS; many data descriptors)
-
-JAVA_LAYER_ROLE=MEDIUM_BUSINESS_LOGIC (Android launcher/glue plus online/payment wrappers; gameplay core is native)
-
-DATA_EXTERNALIZATION_STATUS=HIGH
-MAP_DATA_REUSABLE=PARTIAL
-GRAPHICS_ASSET_INTEGRITY=HIGH (ZIP/header/sample verified)
-AUDIO_ASSETS_REUSABLE=YES
-
-ANDROID_DEPENDENCY_LEVEL=HIGH
-JNI_DEPENDENCY_LEVEL=HIGH
-
-SAVE_SYSTEM_TYPE=package-private native binary files plus small XML metadata; no SQLite
-SAVE_PORT_RISK=HIGH
-
-NETWORK_REQUIRED_FOR_CORE_SINGLEPLAYER=NO
-DEAD_SERVER_BLOCKER_FOR_WINDOWS_PORT=PARTIAL
-
-RENDERING_PORT_RISK=HIGH
-MOSAIC_CAUSED_BY_ASSET_CORRUPTION=UNLIKELY
-WINDOWS_NATIVE_RENDERER_CAN_BYPASS_CURRENT_MOSAIC=LIKELY
-
-ART_REUSE_PERCENT=85-95%
-AUDIO_REUSE_PERCENT=90-100%
-MAP_REUSE_PERCENT=70-85%
-DATA_REUSE_PERCENT=70-85%
-SCRIPT_REUSE_PERCENT=50-70%
-NATIVE_LOGIC_REUSE_PERCENT=10-25%
-OVERALL_CONTENT_REUSE_PERCENT=70-85%
-
-PORT_CLASS=CLASS_C_HEAVY_PORT
-WINDOWS_PORT_FEASIBILITY=MEDIUM
-ENGINEERING_RISK=VERY_HIGH
-
-RECOMMENDED_WINDOWS_NATIVE_PATH=ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER
-MUST_REWRITE_COMPONENTS=Windows entry/window/input; filesystem/save adapter; Android lifecycle/JNI; GLES/EGL/FBO renderer; audio backend; ARM32 native gameplay/state/AI/save logic; optional online/payment abstraction
-
-WINDOWS_POC_FEASIBLE=YES
-RECOMMEND_CONTINUE=YES
-
-ROOT_CONCLUSION=Possible without Android Emulator, but it is a class-C heavy port: content is reusable, while the stripped ARM32 native gameplay core and Android rendering/lifecycle boundary must be rebuilt.
-NEXT_STEP=Implement only PoC-0 through PoC-3 in a separate Windows prototype: window, one original image, one UI descriptor, and one map parser; do not start full battle rewrite yet.
-```
-
-## 证据限制
-
-本轮没有完整反汇编 `libgame.so`，没有声称恢复了所有公式/AI/存档字段；没有把字符串命中当作运行行为；没有把未声明的 Manifest 组件、动态 Dex、Windows 现成工程或完整的在线结算能力臆测为存在。所有 `UNKNOWN` 和百分比区间都保留了这一限制。为生成本轮报告曾在 Codex 工作区短暂创建分析辅助脚本，现已删除，未留下 C 盘持久改动。
+PUSH_STATUS=SYNCED
