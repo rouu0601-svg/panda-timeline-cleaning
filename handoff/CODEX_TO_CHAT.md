@@ -300,3 +300,42 @@ MINIMAL_NEXT_TEST=仅在下一轮获准后：在 D 盘建立新的只读基线�
 ACTION_TAKEN=只读审计 BAT、配置、日志、文件存在性/大小/SHA256；未启动模拟器，未创建或运行 SHOWKERNEL 启动器，未启动 APK，未修改 userdata/cache/APK/网络/防火墙/VMware/C 盘，未 wipe-data。
 
 PUSH_STATUS=SYNCED
+
+
+---
+
+ROUND=WINDOWS_POC_0_TO_3
+PROJECT_PATH=D:\\CodexWorkspace\\MagicWarrior_PC
+FRAMEWORK=WinForms fallback (System.Drawing/GDI+); migration target Axmol/modern cocos2d-x
+COMPILER=.NET Framework CSharp CodeDom provider
+BUILD_SYSTEM=PowerShell Add-Type
+POC0_STATUS=PASS
+WINDOWS_EXE_GENERATED=YES
+WINDOWS_EXE_PATH=D:\\CodexWorkspace\\MagicWarrior_PC\\build\\MagicWarrior_PC_PoC.exe
+WINDOWS_EXE_SHA256=a2f907e2725dbd2c0570c7c4aef3bb593b4483def8a295dd3f013799749a0a2c
+POC1_STATUS=PASS
+ORIGINAL_ASSET_RENDERED=YES
+POC1_SOURCE_ASSET=assets/UIImages/main_map_bg.png (1024x512)
+POC1_ASSET_SHA256=ebefe7af8c48897f4521416ba72a0cd7c8d8bdd976ba4ce9fcd272c40a6dae22
+POC1_RENDERER=System.Drawing.Bitmap/GDI+ PictureBox
+MOSAIC_PRESENT=NO
+COLOR_CORRECT=YES
+ALPHA_CORRECT=YES
+POC2_STATUS=PASS
+PLIST_PARSE=PASS; root=plist; keys=55; frame-like=10
+JSON_PARSE=PASS; TEXT_ENCODING=UTF-8; SKILL_DATA_READABLE=YES; SKILL_ENTRY_COUNT=49
+POC3_STATUS=PASS
+MAP_PARSE=PASS; MAP_SCHEMA=XML-like dict/key/string; MAP_NODE_COUNT=2489; RESOURCE_REFERENCES=black1,clip0,tree-1,clip2
+SPRITE_PARSE=PASS; EQUIPMENT_DATA_READABLE=YES; EQUIPMENT_FIELDS=cnname,equipmenttype,level,property,suitId
+WINDOWS_NATIVE_RENDERING_PROOF=YES
+LEGACY_DATA_READABILITY_PROOF=YES
+ANDROID_EMULATOR_USED=NO
+ORIGINAL_APK_MODIFIED=NO
+NETWORK_SERVICE_USED=NO
+ROUTE_B_FEASIBILITY_AFTER_POC=SUPPORTED
+RECOMMEND_CONTINUE=YES (staged PoC only)
+NEXT_STEP=刀哥复核 PoC-0..3 后再决定 PoC-4 静态地图场景装配；不自动进入战斗。
+PROJECT_REPORT=D:\\CodexWorkspace\\MagicWarrior_PC\\handoff\\WINDOWS_POC_0_TO_3.md
+PROJECT_MACHINE_REPORT=D:\\CodexWorkspace\\MagicWarrior_PC\\handoff\\WINDOWS_POC_0_TO_3.json
+EVIDENCE=D:\\CodexWorkspace\\MagicWarrior_PC\\evidence\\poc1_render_evidence.png
+SCOPE=仅 D 盘独立 Windows PoC；原 APK、模拟器、userdata/cache、网络和 C 盘持久状态均未修改。
