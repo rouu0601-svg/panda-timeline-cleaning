@@ -164,3 +164,16 @@ MINIMAL_NEXT_TEST=在 D 盘新建隔离副本，采用 matrix\\gpu_off 已知成
 ```
 
 PUSH_STATUS=SYNCED
+
+
+## Latest round: WINDOWS_POC_0_TO_3
+
+- 独立工程：D:\\CodexWorkspace\\MagicWarrior_PC（未把 APK 解包目录当工程目录；仅复制测试资源到独立 assets/）。
+- 技术路线：WinForms + System.Drawing/GDI+ 低成本 Windows 原生验证；后续目标仍为 Axmol/现代 cocos2d-x 兼容层。
+- PoC-0：已生成并实际启动 build\\MagicWarrior_PC_PoC.exe（SHA256 a2f907e2725dbd2c0570c7c4aef3bb593b4483def8a295dd3f013799749a0a2c）。
+- PoC-1：原始 main_map_bg.png（1024x512）显示正常，颜色/Alpha 正常，未见彩块；证据图为 evidence\\poc1_render_evidence.png。
+- PoC-2：main_map_bg.plist 以离线 XML 方式成功解析（55 keys）；SkillDescribe.json 以 UTF-8 成功解析（49 个顶层条目，抽样 skill33/skill19/TalentPanel）。
+- PoC-3：1-1.map 成功解析为 XML-like dict/key/string（2,489 keys，识别 spriteName 资源引用）；iebgnauhz.sprite 成功读取真实装备“甲贺护手”和 cnname/equipmenttype/level/property/suitId。
+- WINDOWS_NATIVE_RENDERING_PROOF=YES；LEGACY_DATA_READABILITY_PROOF=YES；RECOMMEND_CONTINUE=YES（仅分阶段 PoC）。
+- 原 APK、模拟器、userdata/cache、网络服务和 C 盘持久状态均未修改；plist 外部 DTD 已禁用网络解析。
+- 本轮硬停：不进入 PoC-4/5，等待刀哥复核后再决定。
