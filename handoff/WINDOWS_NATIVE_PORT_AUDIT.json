@@ -1,0 +1,129 @@
+{
+  "round": "WINDOWS_NATIVE_PORT_FULL_AUDIT",
+  "source": {
+    "analysis_copy": "D:\\CodexData\\MagicWarriorCompat\\game\\magic_warrior.apk",
+    "original_filename": "魔界勇士_2.1_APKPure.apk",
+    "sha256": "7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6",
+    "size_bytes": 40328581
+  },
+  "apk": {
+    "zip_entries": 2522,
+    "uncompressed_bytes": 63705791,
+    "dex_count": 1,
+    "native_library_count": 2,
+    "asset_count": 2509,
+    "res_count": 5,
+    "supported_abi": ["armeabi"],
+    "windows_native_binary_present": false,
+    "package": "com.kongzhong.simlife.battlelandcn",
+    "version_name": "2.1",
+    "version_code": 6,
+    "min_sdk": 8,
+    "target_sdk": "UNKNOWN"
+  },
+  "manifest": {
+    "activities": [
+      {"name": "battlelandAdr", "main_launcher": true},
+      {"name": "Main", "main_launcher": false},
+      {"name": "InputBox", "main_launcher": false}
+    ],
+    "services": [],
+    "receivers": [
+      {"name": ".BatteryAlarmReceiver", "actions": ["android.intent.action.ACTION_POWER_CONNECTED", "android.intent.action.BATTERY_CHANGED"]}
+    ],
+    "providers": [],
+    "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_WIFI_STATE", "android.permission.READ_PHONE_STATE", "android.permission.WAKE_LOCK", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.ACCESS_NETWORK_STATE", "android.permission.INTERNET"]
+  },
+  "cocos2dx": {
+    "present": true,
+    "version": "cocos2d-1.0.1-x-0.12.0",
+    "version_confidence": "HIGH",
+    "modified": "UNKNOWN",
+    "evidence": ["libgame.so string", "CCDirector/CCScene/CCSprite/CCTextureCache symbols", "org.cocos2dx Java glue"]
+  },
+  "native": [
+    {
+      "path": "lib/armeabi/libgame.so",
+      "size_bytes": 7481752,
+      "sha256": "5e7c03ea3e3c2c198c69d5bf96fba28c23947f4f6744abace3b92888d4deb412",
+      "elf": "ELF32 ARM little-endian DYN",
+      "stripped": true,
+      "dynsym": 10745,
+      "defined_exports": 10462,
+      "jni_exports": 24,
+      "needed": ["libcocosdenshion.so", "liblog.so", "libz.so", "libGLESv1_CM.so", "libstdc++.so", "libm.so", "libc.so", "libdl.so"],
+      "role": "core gameplay, renderer calls, resources, save, network and JNI"
+    },
+    {
+      "path": "lib/armeabi/libcocosdenshion.so",
+      "size_bytes": 87280,
+      "sha256": "112f552bef95afca1636742be92930748f9f2e232656a6f8833abc3d761b48d5",
+      "elf": "ELF32 ARM little-endian DYN",
+      "stripped": true,
+      "dynsym": 403,
+      "defined_exports": 375,
+      "jni_exports": 1,
+      "needed": ["liblog.so", "libstdc++.so", "libm.so", "libc.so", "libdl.so"],
+      "role": "CocosDenshion audio backend"
+    }
+  ],
+  "content": {
+    "extensions_in_assets": {"png": 1365, "jpg": 27, "plist": 545, "map": 121, "act": 126, "ani": 29, "ant": 5, "par": 22, "sprite": 131, "json": 15, "mp3": 116, "wav": 5, "txt": 1},
+    "lua_present": false,
+    "javascript_present": false,
+    "script_logic_volume": "LOW; data descriptors are numerous but executable Lua/JS was not found",
+    "data_externalization": "HIGH",
+    "map_data_reusable": "PARTIAL",
+    "graphics_asset_integrity": "HIGH; ZIP/header/sample checks",
+    "audio_assets_reusable": true
+  },
+  "dependencies": {
+    "android_level": "HIGH",
+    "jni_level": "HIGH",
+    "java_role": "MEDIUM_BUSINESS_LOGIC",
+    "direct_replace": ["paths", "basic time/string/logging", "window size and input coordinate mapping"],
+    "compatibility_layer": ["AssetManager/open assets", "CCFileUtils and data parsers", "save path/adapter", "atlas/font/particle loading", "audio lookup"],
+    "rewrite": ["Windows entry/window/input", "Activity/GLSurfaceView/EGL", "24 JNI bridge exports", "device/channel/time offset/sensor hooks", "GLES1/OES/FBO renderer", "audio backend", "ARM32 gameplay/state/AI/save logic"],
+    "delete_or_isolate": ["BatteryAlarmReceiver", "Noumena payment SDK", "WebView/HTTP payment", "update/account/ranking online modules", "telephony/WiFi/device ID/sensors"]
+  },
+  "save": {
+    "type": "package-private native binary files plus small XML metadata; no SQLite",
+    "local": true,
+    "reusable": "PARTIAL",
+    "port_risk": "HIGH",
+    "files": ["a_file_android_1_0", "a_server_android", "name_android_tmp", "xp.txt"]
+  },
+  "network": {
+    "core_singleplayer_required": false,
+    "dead_server_blocker": "PARTIAL",
+    "game_endpoints": ["android.simlife.net/HeroBattle.php", "android2.simlife.net/HeroBattle.php", "www.simlife.com/HeroBattle_test/HeroBattle.php"],
+    "update_or_channel": ["herobattlecrack.simlife.net/updateherobattle.php", "wmch.kongzhong.com"],
+    "payment": ["passport.kongzhong.com/m/pay.do", "pay.noumenainnovations.com/pay/*", "www.simlife.com/HeroBattle_pay/creakpay.php", "www.simlife.com/admin/iap/*"],
+    "dynamic_evidence": "offline boot, character creation, map, arena list and first battle start succeeded; old servers were not contacted"
+  },
+  "rendering": {
+    "port_risk": "HIGH",
+    "mosaic_asset_corruption": "UNLIKELY",
+    "windows_native_renderer_bypass": "LIKELY",
+    "evidence": ["PNG/JPEG headers and ZIP extraction valid", "GLES1 fixed pipeline", "OES framebuffer/mipmap calls", "historical emulator EGL/OES/FBO errors"]
+  },
+  "reuse_estimates": {
+    "art": "85-95%",
+    "audio": "90-100%",
+    "map": "70-85%",
+    "data": "70-85%",
+    "script": "50-70%",
+    "native_logic": "10-25%",
+    "overall_content": "70-85%"
+  },
+  "classification": {
+    "port_class": "CLASS_C_HEAVY_PORT",
+    "windows_port_feasibility": "MEDIUM",
+    "engineering_risk": "VERY_HIGH",
+    "recommended_path": "ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER",
+    "windows_poc_feasible": true,
+    "recommend_continue": true
+  },
+  "conclusion": "A Windows-native version is feasible without Android Emulator, but the ARM32 stripped libgame.so gameplay core and Android/JNI/GLES boundary must be rebuilt; original content assets and much of the data can be retained.",
+  "next_step": "PoC-0 through PoC-3 only: window, one original image, one UI descriptor and one custom map parser."
+}

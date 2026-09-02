@@ -1,5 +1,69 @@
 # Codex -> ChatGPT handoff
 
+ROUND=WINDOWS_NATIVE_PORT_FULL_AUDIT
+
+REPORT=handoff/WINDOWS_NATIVE_PORT_AUDIT.md
+MACHINE_REPORT=handoff/WINDOWS_NATIVE_PORT_AUDIT.json
+
+APK_INTEGRITY=VERIFIED_SHA256_MATCH; SHA256=7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6
+COCOS2DX_PRESENT=YES
+COCOS2DX_VERSION=cocos2d-1.0.1-x-0.12.0 (HIGH confidence)
+COCOS2DX_MODIFIED=UNKNOWN (custom game integration proven; upstream source delta not provable from stripped ELF)
+PRIMARY_ABI=armeabi / ARM32
+NATIVE_LIBRARY_COUNT=2
+NATIVE_LOGIC_CONCENTRATION=VERY_HIGH (libgame.so 7,481,752 bytes; 10,462 defined dynamic exports; gameplay symbols/classes present)
+LUA_PRESENT=NO
+JAVASCRIPT_PRESENT=NO
+SCRIPT_LOGIC_VOLUME=LOW (no executable Lua/JS; many plist/map/json/act/ani data descriptors)
+JAVA_LAYER_ROLE=MEDIUM_BUSINESS_LOGIC (launcher/lifecycle/input/online/payment glue; gameplay core native)
+DATA_EXTERNALIZATION_STATUS=HIGH
+MAP_DATA_REUSABLE=PARTIAL
+GRAPHICS_ASSET_INTEGRITY=HIGH (ZIP/header/sample checks; no PVR/ETC/PKM/DDS/KTX/WebP)
+AUDIO_ASSETS_REUSABLE=YES
+ANDROID_DEPENDENCY_LEVEL=HIGH
+JNI_DEPENDENCY_LEVEL=HIGH
+SAVE_SYSTEM_TYPE=package-private native binary files plus small XML metadata; no SQLite
+SAVE_PORT_RISK=HIGH
+NETWORK_REQUIRED_FOR_CORE_SINGLEPLAYER=NO (historical fully offline boot/create/map/arena/first-battle-start evidence)
+DEAD_SERVER_BLOCKER_FOR_WINDOWS_PORT=PARTIAL (online/payment/update/rank only)
+RENDERING_PORT_RISK=HIGH
+MOSAIC_CAUSED_BY_ASSET_CORRUPTION=UNLIKELY
+WINDOWS_NATIVE_RENDERER_CAN_BYPASS_CURRENT_MOSAIC=LIKELY
+ART_REUSE_PERCENT=85-95%
+AUDIO_REUSE_PERCENT=90-100%
+MAP_REUSE_PERCENT=70-85%
+DATA_REUSE_PERCENT=70-85%
+SCRIPT_REUSE_PERCENT=50-70%
+NATIVE_LOGIC_REUSE_PERCENT=10-25%
+OVERALL_CONTENT_REUSE_PERCENT=70-85%
+PORT_CLASS=CLASS_C_HEAVY_PORT
+WINDOWS_PORT_FEASIBILITY=MEDIUM
+ENGINEERING_RISK=VERY_HIGH
+RECOMMENDED_WINDOWS_NATIVE_PATH=ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER
+MUST_REWRITE_COMPONENTS=Windows entry/window/input; filesystem/save adapter; Android lifecycle/JNI; GLES/EGL/FBO renderer; audio backend; ARM32 native gameplay/state/AI/save logic; optional online/payment abstraction
+WINDOWS_POC_FEASIBLE=YES
+RECOMMEND_CONTINUE=YES (staged PoC only)
+ROOT_CONCLUSION=Windows-native recovery is feasible without Android Emulator, but this is a class-C heavy port: content is reusable while stripped ARM32 gameplay and Android rendering/lifecycle boundaries must be rebuilt.
+NEXT_STEP=PoC-0..PoC-3 only: open a Windows window, load one original PNG, render one UI descriptor, and parse one original map; do not start a full battle rewrite.
+
+EVIDENCE_SUMMARY=
+- APK copy: D:\CodexData\MagicWarriorCompat\game\magic_warrior.apk, 40,328,581 bytes, 2,522 ZIP entries, 2,509 assets, 5 res entries, 1 classes.dex, 2 ARM32 libraries, no Windows PE.
+- Manifest: 3 activities (battlelandAdr MAIN/LAUNCHER, Main, InputBox), 1 BatteryAlarmReceiver (power-connected/battery-changed), no services/providers; minSdk 8, target SDK not declared.
+- Native: libgame.so SHA256 5e7c03ea3e3c2c198c69d5bf96fba28c23947f4f6744abace3b92888d4deb412; libcocosdenshion.so SHA256 112f552bef95afca1636742be92930748f9f2e232656a6f8833abc3d761b48d5; both stripped ELF32 ARM.
+- Content: 1,365 PNG, 27 JPG, 545 plist, 121 map, 126 act, 29 ani, 5 ant, 22 par, 131 sprite, 15 JSON, 116 MP3, 5 WAV; no Lua/JS.
+- Historical dynamic evidence: API21/ARM32 offline install, boot, character creation, map entry and first-battle start succeeded; saved state is package-root binary/XML, not SQLite; server is not required for core single-player.
+- Rendering evidence: fixed GLES1 + OES/FBO/mipmap/atlas calls and old emulator EGL/FBO errors; image headers are valid, so mosaic is unlikely to be asset corruption.
+
+FILES_CREATED=handoff/WINDOWS_NATIVE_PORT_AUDIT.md; handoff/WINDOWS_NATIVE_PORT_AUDIT.json
+FILES_UPDATED=handoff/CODEX_TO_CHAT.md; handoff/CURRENT_STATE.md
+SCOPE=READ_ONLY_STATIC_ARCHITECTURE_AUDIT
+APK_MODIFIED=NO
+EMULATOR_STARTED=NO
+NETWORK_ACCESSED=NO
+C_DRIVE_WRITTEN=NO
+
+---
+
 ROUND=HOST_FOREGROUND_LAUNCHER
 
 HANDOFF_FILES_CREATED=YES

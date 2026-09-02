@@ -1,5 +1,21 @@
 # MagicWarrior current state
 
+## Latest stable state: WINDOWS_NATIVE_PORT_FULL_AUDIT
+
+- Audit report: `handoff/WINDOWS_NATIVE_PORT_AUDIT.md`
+- Machine-readable report: `handoff/WINDOWS_NATIVE_PORT_AUDIT.json`
+- Original APK analysis copy: `D:\CodexData\MagicWarriorCompat\game\magic_warrior.apk`; SHA256 `7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6`; original APK was not modified.
+- APK structure: 2,522 ZIP entries; 2,509 assets; 5 `res` entries; 1 `classes.dex`; 2 ARM32 `armeabi` ELF libraries; no Windows PE binary.
+- Engine: `cocos2d-1.0.1-x-0.12.0` string plus Cocos symbols; version confidence HIGH. Custom game integration is confirmed, but upstream engine source modifications remain UNKNOWN.
+- Core logic: `lib/armeabi/libgame.so` (7,481,752 bytes, SHA256 `5e7c03ea3e3c2c198c69d5bf96fba28c23947f4f6744abace3b92888d4deb412`) is stripped ARM32 and contains role, battle, map, skill, save, network, renderer and 24 JNI exports. `libcocosdenshion.so` is the separate audio library (87,280 bytes, SHA256 `112f552bef95afca1636742be92930748f9f2e232656a6f8833abc3d761b48d5`).
+- Content: 1,365 PNG, 27 JPG, 545 plist, 121 map, 126 act, 29 ani, 5 ant, 22 par, 131 sprite, 15 JSON, 116 MP3 and 5 WAV in assets; no Lua/JS executable scripts. Data descriptors are plentiful, but gameplay rules remain native.
+- Historical offline evidence remains authoritative: API21/ARM32 installed and booted the game, created a character, entered the map and started the first battle without the old server. Saves were package-root binary/XML files (`a_file_android_1_0`, `a_server_android`, `name_android_tmp`, `xp.txt`), not SQLite.
+- Graphics conclusion: assets are ZIP/header/sample-valid and there are no PVR/ETC/PKM/DDS/KTX/WebP textures. `libgame.so` uses GLES1 fixed pipeline plus OES/FBO/mipmap/atlas paths; old emulator EGL/FBO failures make asset corruption UNLIKELY as the mosaic root. A Windows-native renderer can LIKELY bypass that emulator-specific artifact.
+- Windows classification: `CLASS_C_HEAVY_PORT`; feasibility MEDIUM; engineering risk VERY_HIGH. Reuse estimates: art 85-95%, audio 90-100%, map 70-85%, data 70-85%, descriptor/script 50-70%, native logic 10-25%, overall content 70-85%.
+- Recommended route: `ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER`. Rebuild Windows entry/window/input, filesystem/save adapter, lifecycle/JNI, GLES/EGL/FBO renderer, audio backend and ARM32 gameplay/state/AI/save logic; remove or isolate obsolete payment, update, account and device SDKs.
+- `WINDOWS_POC_FEASIBLE=YES`; `RECOMMEND_CONTINUE=YES` only as a staged PoC. First PoC is window -> one original image -> one UI descriptor/font -> one custom map parser. Do not start full battle rewrite in the audit round.
+- This round was read-only: no APK, emulator, network, firewall, VMware, userdata/cache or C-drive writes.
+
 ## Stable facts
 
 - 原 APK 未修改，SHA256：`7977a38cdc22ae0c7f6c384feaba174961b7672c25fd08b1abf754c13e9e8cd6`
