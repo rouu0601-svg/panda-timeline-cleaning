@@ -15,7 +15,7 @@
 - Recommended route: `ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER`. Rebuild Windows entry/window/input, filesystem/save adapter, lifecycle/JNI, GLES/EGL/FBO renderer, audio backend and ARM32 gameplay/state/AI/save logic; remove or isolate obsolete payment, update, account and device SDKs.
 - `WINDOWS_POC_FEASIBLE=YES`; `RECOMMEND_CONTINUE=YES` only as a staged PoC. First PoC is window -> one original image -> one UI descriptor/font -> one custom map parser. Do not start full battle rewrite in the audit round.
 - This round was read-only: no APK, emulator, network, firewall, VMware, userdata/cache or C-drive writes.
-- Local commit created: `8dc9eedc11ab45ea23ed35c5fbc69ac528fc9601`. GitHub push was attempted repeatedly but `github.com:443` was unreachable from this session; remote update is not confirmed. No APK/emulator/network state was changed by the push attempts.
+- Final local commit `5625e3436b11b34e527c080511dcf090d1115618` is pushed and `main` is synchronized with `origin/main`. No APK/emulator/network state was changed by the Git operations.
 
 ## Stable facts
 
