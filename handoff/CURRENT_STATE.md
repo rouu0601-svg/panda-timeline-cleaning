@@ -1,6 +1,20 @@
 # MagicWarrior current state
 
-## Latest stable state: WINDOWS_NATIVE_PORT_FULL_AUDIT
+## Latest stable state: WINDOWS_POC_3_5_TARGET_RUNTIME_BOOTSTRAP
+
+LATEST_STABLE_ROUND=WINDOWS_POC_0_TO_3
+POC0_STATUS=PASS
+POC1_STATUS=PASS
+POC2_STATUS=PASS
+POC3_STATUS=PASS
+WINDOWS_HOST_ASSET_DECODE_PROOF=YES
+LEGACY_DATA_READABILITY_PROOF=YES
+WINDOWS_GDI_ASSET_RENDERING_PROOF=YES
+TARGET_ENGINE_RENDERING_PROOF=NOT_YET_VERIFIED
+
+本轮进行目标运行时体检。当前机器未发现 cl/MSVC、CMake、dotnet、gcc 或 clang，也未发现标准位置的 Visual Studio/Build Tools；因此 Axmol C++ 工具链尚未配置，目标 C++ EXE、Axmol PNG/atlas 渲染均未执行。原 APK、Android 模拟器、网络和 C 盘均未改动。下一步需先安装官方 MSVC C++ workload 与 CMake（系统组件可能写入 C 盘），再在 D 盘工程中配置 Axmol。
+
+
 
 - Audit report: `handoff/WINDOWS_NATIVE_PORT_AUDIT.md`
 - Machine-readable report: `handoff/WINDOWS_NATIVE_PORT_AUDIT.json`
@@ -177,3 +191,4 @@ PUSH_STATUS=SYNCED
 - WINDOWS_NATIVE_RENDERING_PROOF=YES；LEGACY_DATA_READABILITY_PROOF=YES；RECOMMEND_CONTINUE=YES（仅分阶段 PoC）。
 - 原 APK、模拟器、userdata/cache、网络服务和 C 盘持久状态均未修改；plist 外部 DTD 已禁用网络解析。
 - 本轮硬停：不进入 PoC-4/5，等待刀哥复核后再决定。
+
