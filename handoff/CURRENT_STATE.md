@@ -14,7 +14,7 @@
 - Windows classification: `CLASS_C_HEAVY_PORT`; feasibility MEDIUM; engineering risk VERY_HIGH. Reuse estimates: art 85-95%, audio 90-100%, map 70-85%, data 70-85%, descriptor/script 50-70%, native logic 10-25%, overall content 70-85%.
 - Recommended route: `ROUTE_B_MODERN_COCOS2DX_OR_AXMOL_WITH_COMPATIBILITY_DATA_LAYER`. Rebuild Windows entry/window/input, filesystem/save adapter, lifecycle/JNI, GLES/EGL/FBO renderer, audio backend and ARM32 gameplay/state/AI/save logic; remove or isolate obsolete payment, update, account and device SDKs.
 - `WINDOWS_POC_FEASIBLE=YES`; `RECOMMEND_CONTINUE=YES` only as a staged PoC. First PoC is window -> one original image -> one UI descriptor/font -> one custom map parser. Do not start full battle rewrite in the audit round.
-- This round was read-only: no APK, emulator, network, firewall, VMware, userdata/cache or C-drive writes.
+- This round was read-only against the game/emulator: no APK, emulator, network, firewall, VMware or userdata/cache changes. Temporary Codex analysis helpers on C drive were removed; no persistent C-drive change remains.
 - Final local commit `5625e3436b11b34e527c080511dcf090d1115618` is pushed and `main` is synchronized with `origin/main`. No APK/emulator/network state was changed by the Git operations.
 
 ## Stable facts
